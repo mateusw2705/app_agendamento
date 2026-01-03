@@ -1,32 +1,110 @@
 <!DOCTYPE html>
-<html>
-<head><meta charset="UTF-8"></head>
-<body>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Redirecionando... | AgendaBarber</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-950 text-white flex items-center justify-center min-h-screen">
+  <div class="text-center">
+    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500 mx-auto mb-4"></div>
+    <p class="text-lg">Carregando...</p>
+  </div>
 
 <script type="module">
 import { supabase } from './js/supabase.js'
 
-const { data } = await supabase.auth.getUser()
-if (!data.user) location.href = 'login.html'
+async function redirecionar() {
+  try {
+    console.log('Iniciando redirecionamento...')
+    
+    // Buscar usuário
+    const { data, error: authError } = await supabase.auth.getUser()
+    console.log('Dados do usuário autenticado:', data)
+    if (authError) {
+      console.error('Erro ao buscar usuário:', authError)
+      window.location.href = 'login.html'
+      return
+    }
+    
+    if (!data?.user) {
+      console.log('Usuário não autenticado')
+      window.location.href = 'login.html'
+      return
+    }
 
-const { data: profile, error: profileError } = await supabase
-  .from('profiles')
-  .select('*')
-  .eq('id', data.user.id)
-  .single()
+    console.log('Usuário encontrado:', data.user.id)
+    
+    // Buscar perfil
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', data.user.id)
+      .single()
 
-if (profileError || !profile) {
-  console.error('Erro ao carregar perfil:', profileError)
-  alert('Perfil não encontrado. Por favor, crie uma conta primeiro.')
-  await supabase.auth.signOut()
-  location.href = 'register.html'
-  throw new Error('Perfil não encontrado')
+    console.log('Dados do perfil:', profile)
+
+    if (profileError) {
+      console.error('Erro ao carregar perfil:', profileError)
+      if (profileError.code === 'PGRST116' || profileError.message?.includes('No rows')) {
+        alert('Perfil não encontrado. Por favor, crie uma conta primeiro.')
+        await supabase.auth.signOut()
+        window.location.href = 'register.html'
+      } else {
+        alert('Erro ao carregar perfil: ' + profileError.message)
+        await supabase.auth.signOut()
+        window.location.href = 'login.html'
+      }
+      return
+    }
+
+    if (!profile) {
+      console.error('Perfil vazio')
+      alert('Perfil não encontrado. Por favor, crie uma conta primeiro.')
+      await supabase.auth.signOut()
+      window.location.href = 'register.html'
+      return
+    }
+
+    console.log('Perfil carregado. Role:', profile.role)
+
+    // Determinar URL de redirecionamento
+    let redirectUrl = null
+    
+    if (profile.role === 'master') {
+      redirectUrl = 'master.html'
+    } else if (profile.role === 'admin') {
+      redirectUrl = 'admin.html'
+    } else if (profile.role === 'barbeiro') {
+      redirectUrl = 'barber.html'
+    } else if (profile.role === 'cliente') {
+      redirectUrl = 'client.html'
+    } else {
+      console.error('Role desconhecido:', profile.role)
+      alert('Tipo de usuário não reconhecido: ' + (profile.role || 'vazio'))
+      await supabase.auth.signOut()
+      window.location.href = 'login.html'
+      return
+    }
+
+    // Redirecionar
+    if (redirectUrl) {
+      console.log('Redirecionando para:', redirectUrl)
+      // Usar replace para evitar histórico
+      window.location.replace(redirectUrl)
+    } else {
+      console.error('URL de redirecionamento não definida')
+      window.location.href = 'login.html'
+    }
+  } catch (error) {
+    console.error('Erro no router:', error)
+    alert('Erro ao processar redirecionamento: ' + error.message)
+    window.location.href = 'login.html'
+  }
 }
 
-if (profile.role === 'master') location.href = 'master.html'
-if (profile.role === 'admin') location.href = 'admin.html'
-if (profile.role === 'barbeiro') location.href = 'barber.html'
-if (profile.role === 'cliente') location.href = 'client.html'
+// Executar redirecionamento imediatamente
+redirecionar()
 </script>
 
 </body>

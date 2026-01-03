@@ -7,977 +7,709 @@
 </head>
 <body class="bg-slate-950 text-white min-h-screen">
 
-<!-- Header -->
+<!-- HEADER -->
 <header class="bg-slate-900 border-b border-slate-800 px-8 py-4 flex justify-between items-center">
-  <h1 class="text-2xl font-bold">Agenda<span class="text-green-500">Barber</span></h1>
+  <h1 class="text-2xl font-bold">
+    Agenda<span class="text-green-500">Barber</span>
+  </h1>
   <div class="flex gap-4 items-center">
     <span id="userName" class="text-gray-300"></span>
     <span id="barbeariaName" class="text-gray-400 text-sm"></span>
-    <button id="btnLogout" class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded text-sm font-semibold">
-      Sair
-    </button>
+    <button id="btnLogout" class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded text-sm font-semibold">Sair</button>
   </div>
 </header>
 
+<!-- CONTEÚDO -->
 <div class="max-w-7xl mx-auto px-6 py-8">
-  <!-- Seção de Configuração Inicial (quando não tem barbearia) -->
-  <div id="configuracaoInicial" class="hidden">
-    <div class="max-w-2xl mx-auto">
-      <h2 class="text-3xl font-bold mb-6 text-center">Configure sua Barbearia</h2>
-      <p class="text-gray-400 mb-8 text-center">Você precisa criar ou associar sua barbearia para continuar</p>
-      
-      <div class="bg-slate-900 p-8 rounded-xl border border-slate-800">
-        <!-- Opção 1: Criar Nova Barbearia -->
-        <div class="mb-8">
-          <h3 class="text-xl font-bold mb-4">Criar Nova Barbearia</h3>
-          <div class="space-y-4">
-            <div>
-              <label class="block text-sm font-medium mb-2">Nome da Barbearia</label>
-              <input id="inputNomeBarbearia" type="text" 
-                class="w-full p-3 bg-slate-800 rounded-lg border border-slate-700" 
-                placeholder="Ex: Barbearia do João">
-            </div>
-            <button id="btnCriarBarbearia" 
-              class="w-full bg-green-500 hover:bg-green-600 text-black px-6 py-3 rounded-lg font-semibold">
-              Criar Barbearia
-            </button>
+  <div id="dashboardPrincipal">
+    <h2 class="text-3xl font-bold mb-6">Dashboard da Barbearia</h2>
+    <!-- ESTATÍSTICAS -->
+    <div class="grid md:grid-cols-4 gap-4 mb-6">
+      <div class="bg-slate-900 p-6 rounded-xl border border-slate-800">
+        <div id="statAgendamentos" class="text-3xl font-bold text-green-400">0</div>
+        <div class="text-sm text-gray-400 mt-1">Agendamentos Hoje</div>
+      </div>
+      <div class="bg-slate-900 p-6 rounded-xl border border-slate-800">
+        <div id="statBarbeiros" class="text-3xl font-bold text-blue-400">0</div>
+        <div class="text-sm text-gray-400 mt-1">Barbeiros</div>
+      </div>
+      <div class="bg-slate-900 p-6 rounded-xl border border-slate-800">
+        <div id="statServicos" class="text-3xl font-bold text-purple-400">0</div>
+        <div class="text-sm text-gray-400 mt-1">Serviços</div>
+      </div>
+      <div class="bg-slate-900 p-6 rounded-xl border border-slate-800">
+        <div id="statPendentes" class="text-3xl font-bold text-yellow-400">0</div>
+        <div class="text-sm text-gray-400 mt-1">Pendentes</div>
+      </div>
+    </div>
+    <!-- TABS -->
+    <div class="border-b border-slate-800 mb-6">
+      <div class="flex gap-4">
+        <button id="tabAgendamentos" class="tab-btn px-4 py-2 border-b-2 border-green-500 font-semibold">Agendamentos</button>
+        <button id="tabServicos" class="tab-btn px-4 py-2 border-b-2 border-transparent hover:border-slate-700 font-semibold">Serviços</button>
+        <button id="tabBarbeiros" class="tab-btn px-4 py-2 border-b-2 border-transparent hover:border-slate-700 font-semibold">Barbeiros</button>
+      </div>
+    </div>
+    <!-- CONTEÚDOS -->
+    <div id="conteudoAgendamentos">
+      <button id="btnNovoAgendamento" class="mb-4 bg-green-500 hover:bg-green-600 text-black px-4 py-2 rounded font-semibold">+ Novo Agendamento</button>
+      <div id="formNovoAgendamento" class="hidden bg-slate-900 p-6 rounded-xl border border-slate-700 mb-6">
+        <h3 class="text-xl mb-4">Novo Agendamento</h3>
+        <div class="grid md:grid-cols-2 gap-4 mb-4">
+          <div>
+            <label class="block text-sm mb-1">Cliente</label>
+            <select id="agendamentoCliente" class="w-full p-2 rounded bg-slate-800 border border-slate-700">
+              <option value="">Selecione um cliente</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm mb-1">Barbeiro</label>
+            <select id="agendamentoBarbeiro" class="w-full p-2 rounded bg-slate-800 border border-slate-700">
+              <option value="">Selecione um barbeiro</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm mb-1">Serviço</label>
+            <select id="agendamentoServico" class="w-full p-2 rounded bg-slate-800 border border-slate-700">
+              <option value="">Selecione um serviço</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm mb-1">Data</label>
+            <input id="agendamentoData" type="date" class="w-full p-2 rounded bg-slate-800 border border-slate-700">
+          </div>
+          <div>
+            <label class="block text-sm mb-1">Hora</label>
+            <input id="agendamentoHora" type="time" class="w-full p-2 rounded bg-slate-800 border border-slate-700">
           </div>
         </div>
-        
-        <div class="border-t border-slate-800 pt-8">
-          <h3 class="text-xl font-bold mb-4">OU Associar a uma Barbearia Existente</h3>
-          <div class="space-y-4">
-            <div>
-              <label class="block text-sm font-medium mb-2">Selecione uma Barbearia</label>
-              <select id="selectBarbeariaExistente" class="w-full p-3 bg-slate-800 rounded-lg border border-slate-700">
-                <option value="">Carregando barbearias...</option>
-              </select>
-            </div>
-            <button id="btnAssociarBarbearia" 
-              class="w-full bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded-lg font-semibold">
-              Associar Barbearia
-            </button>
-          </div>
-        </div>
+        <button id="salvarAgendamento" class="bg-green-500 px-4 py-2 rounded font-medium text-black">Salvar</button>
+        <button id="cancelarAgendamento" class="ml-2 bg-gray-600 py-2 px-4 rounded">Cancelar</button>
       </div>
+      <div id="listaAgendamentos"></div>
     </div>
-  </div>
-
-  <!-- Dashboard Principal (quando tem barbearia) -->
-  <div id="dashboardPrincipal" class="hidden">
-  <h2 class="text-3xl font-bold mb-6">Dashboard da Barbearia</h2>
-
-  <!-- Estatísticas -->
-  <div class="grid md:grid-cols-4 gap-4 mb-6">
-    <div class="bg-slate-900 p-6 rounded-xl border border-slate-800">
-      <div class="text-3xl font-bold text-green-400" id="statAgendamentos">0</div>
-      <div class="text-sm text-gray-400 mt-1">Agendamentos Hoje</div>
-    </div>
-    <div class="bg-slate-900 p-6 rounded-xl border border-slate-800">
-      <div class="text-3xl font-bold text-blue-400" id="statBarbeiros">0</div>
-      <div class="text-sm text-gray-400 mt-1">Barbeiros</div>
-    </div>
-    <div class="bg-slate-900 p-6 rounded-xl border border-slate-800">
-      <div class="text-3xl font-bold text-purple-400" id="statServicos">0</div>
-      <div class="text-sm text-gray-400 mt-1">Serviços</div>
-    </div>
-    <div class="bg-slate-900 p-6 rounded-xl border border-slate-800">
-      <div class="text-3xl font-bold text-yellow-400" id="statPendentes">0</div>
-      <div class="text-sm text-gray-400 mt-1">Pendentes</div>
-    </div>
-  </div>
-
-  <!-- Tabs -->
-  <div class="border-b border-slate-800 mb-6">
-    <div class="flex gap-4">
-      <button id="tabAgendamentos" class="tab-btn active px-4 py-2 border-b-2 border-green-500 font-semibold">
-        Agendamentos
-      </button>
-      <button id="tabServicos" class="tab-btn px-4 py-2 border-b-2 border-transparent hover:border-slate-700 font-semibold">
-        Serviços
-      </button>
-      <button id="tabBarbeiros" class="tab-btn px-4 py-2 border-b-2 border-transparent hover:border-slate-700 font-semibold">
-        Barbeiros
-      </button>
-    </div>
-  </div>
-
-  <!-- Conteúdo: Agendamentos -->
-  <div id="conteudoAgendamentos" class="tab-content">
-    <!-- Filtros -->
-    <div class="bg-slate-900 p-4 rounded-xl mb-6 border border-slate-800">
-      <div class="flex gap-4 items-center flex-wrap">
-        <div>
-          <label class="block text-sm font-medium mb-2">Filtrar por data</label>
-          <input id="filtroData" type="date" class="p-2 bg-slate-800 rounded-lg border border-slate-700">
-        </div>
-        <div>
-          <label class="block text-sm font-medium mb-2">Filtrar por status</label>
-          <select id="filtroStatus" class="p-2 bg-slate-800 rounded-lg border border-slate-700">
-            <option value="">Todos</option>
-            <option value="pendente">Pendente</option>
-            <option value="confirmado">Confirmado</option>
-            <option value="concluido">Concluído</option>
-            <option value="cancelado">Cancelado</option>
-          </select>
-        </div>
-        <div class="flex items-end">
-          <button id="btnLimparFiltros" 
-            class="bg-gray-600 hover:bg-gray-700 px-4 py-2 rounded-lg text-sm font-semibold">
-            Limpar Filtros
-          </button>
-        </div>
+    <div id="conteudoServicos" class="hidden">
+      <button id="btnNovoServico" class="mb-4 bg-green-500 hover:bg-green-600 text-black px-4 py-2 rounded font-semibold">+ Novo Serviço</button>
+      <div id="formNovoServico" class="hidden bg-slate-900 p-6 rounded-xl border border-slate-700 mb-6">
+        <h3 class="text-xl mb-4">Novo Serviço</h3>
+        <input id="servicoNome" type="text" placeholder="Nome do serviço" class="w-full p-2 mb-2 rounded bg-slate-800">
+        <input id="servicoDuracao" type="number" placeholder="Duração (min)" class="w-full p-2 mb-2 rounded bg-slate-800">
+        <input id="servicoPreco" type="number" placeholder="Preço" class="w-full p-2 mb-2 rounded bg-slate-800">
+        <button id="salvarServico" class="bg-green-500 px-4 py-2 rounded font-medium text-black">Salvar</button>
+        <button id="cancelarServico" class="ml-2 bg-gray-600 py-2 px-4 rounded">Cancelar</button>
       </div>
+      <div id="listaServicos"></div>
     </div>
-
-    <!-- Lista de Agendamentos -->
-    <div id="listaAgendamentos" class="space-y-4">
-      <!-- Agendamentos serão inseridos aqui -->
-    </div>
-
-    <div id="mensagemVaziaAgendamentos" class="hidden text-center py-12 text-gray-400">
-      <p class="text-lg">Nenhum agendamento encontrado.</p>
-    </div>
-  </div>
-
-  <!-- Conteúdo: Serviços -->
-  <div id="conteudoServicos" class="tab-content hidden">
-    <!-- Botão para novo serviço -->
-    <button id="btnNovoServico" 
-      class="mb-6 bg-green-500 hover:bg-green-600 text-black px-6 py-3 rounded-lg font-semibold">
-      + Novo Serviço
-    </button>
-
-    <!-- Formulário de Serviço (oculto inicialmente) -->
-    <div id="formServico" class="hidden bg-slate-900 p-6 rounded-xl mb-6 border border-slate-800">
-      <h3 class="text-xl font-bold mb-4" id="formTitleServico">Novo Serviço</h3>
-      
-      <div class="grid md:grid-cols-3 gap-4 mb-4">
-        <div>
-          <label class="block text-sm font-medium mb-2">Nome do Serviço</label>
-          <input id="inputNomeServico" type="text" 
-            class="w-full p-3 bg-slate-800 rounded-lg border border-slate-700" 
-            placeholder="Ex: Corte de Cabelo">
-        </div>
-        
-        <div>
-          <label class="block text-sm font-medium mb-2">Duração (minutos)</label>
-          <input id="inputDuracaoServico" type="number" 
-            class="w-full p-3 bg-slate-800 rounded-lg border border-slate-700" 
-            placeholder="30" min="1">
-        </div>
-        
-        <div>
-          <label class="block text-sm font-medium mb-2">Preço (R$)</label>
-          <input id="inputPrecoServico" type="number" step="0.01"
-            class="w-full p-3 bg-slate-800 rounded-lg border border-slate-700" 
-            placeholder="50.00" min="0">
-        </div>
+    <div id="conteudoBarbeiros" class="hidden">
+      <button id="btnNovoBarbeiro" class="mb-4 bg-green-500 hover:bg-green-600 text-black px-4 py-2 rounded font-semibold">+ Novo Barbeiro</button>
+      <div id="formNovoBarbeiro" class="hidden bg-slate-900 p-6 rounded-xl border border-slate-700 mb-6">
+        <h3 class="text-xl mb-4">Novo Barbeiro</h3>
+        <input id="barbeiroNome" type="text" placeholder="Nome do barbeiro" class="w-full p-2 mb-2 rounded bg-slate-800">
+        <input id="barbeiroEmail" type="email" placeholder="Email do barbeiro" class="w-full p-2 mb-2 rounded bg-slate-800">
+        <label id="barbeiroSenhaLabel" class="block text-sm mb-1">Senha provisória</label>
+        <input id="barbeiroSenha" type="password" placeholder="Senha provisória" class="w-full p-2 mb-2 rounded bg-slate-800">
+        <button id="salvarBarbeiro" class="bg-green-500 px-4 py-2 rounded font-medium text-black">Salvar</button>
+        <button id="cancelarBarbeiro" class="ml-2 bg-gray-600 py-2 px-4 rounded">Cancelar</button>
       </div>
-      
-      <div class="flex gap-3">
-        <button id="btnSalvarServico" 
-          class="bg-green-500 hover:bg-green-600 text-black px-6 py-2 rounded-lg font-semibold">
-          Salvar
-        </button>
-        <button id="btnCancelarFormServico" 
-          class="bg-gray-600 hover:bg-gray-700 px-6 py-2 rounded-lg font-semibold">
-          Cancelar
-        </button>
-      </div>
+      <div id="listaBarbeiros"></div>
     </div>
-
-    <!-- Lista de Serviços -->
-    <div id="listaServicos" class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-      <!-- Serviços serão inseridos aqui -->
-    </div>
-
-    <div id="mensagemVaziaServicos" class="hidden text-center py-12 text-gray-400">
-      <p class="text-lg">Nenhum serviço cadastrado.</p>
-      <p class="text-sm mt-2">Clique em "Novo Serviço" para começar.</p>
-    </div>
-  </div>
-
-  <!-- Conteúdo: Barbeiros -->
-  <div id="conteudoBarbeiros" class="tab-content hidden">
-    <!-- Botão para novo barbeiro -->
-    <button id="btnNovoBarbeiro" 
-      class="mb-6 bg-green-500 hover:bg-green-600 text-black px-6 py-3 rounded-lg font-semibold">
-      + Novo Barbeiro
-    </button>
-
-    <!-- Formulário de Barbeiro (oculto inicialmente) -->
-    <div id="formBarbeiro" class="hidden bg-slate-900 p-6 rounded-xl mb-6 border border-slate-800">
-      <h3 class="text-xl font-bold mb-4">Cadastrar Novo Barbeiro</h3>
-      
-      <div class="grid md:grid-cols-2 gap-4 mb-4">
-        <div>
-          <label class="block text-sm font-medium mb-2">Nome do Barbeiro</label>
-          <input id="inputNomeBarbeiro" type="text" 
-            class="w-full p-3 bg-slate-800 rounded-lg border border-slate-700" 
-            placeholder="Ex: João Silva">
-        </div>
-        
-        <div>
-          <label class="block text-sm font-medium mb-2">Email</label>
-          <input id="inputEmailBarbeiro" type="email" 
-            class="w-full p-3 bg-slate-800 rounded-lg border border-slate-700" 
-            placeholder="email@exemplo.com">
-        </div>
-        
-        <div>
-          <label class="block text-sm font-medium mb-2">Senha</label>
-          <input id="inputSenhaBarbeiro" type="password" 
-            class="w-full p-3 bg-slate-800 rounded-lg border border-slate-700" 
-            placeholder="Mínimo 6 caracteres">
-        </div>
-      </div>
-      
-      <div class="flex gap-3">
-        <button id="btnSalvarBarbeiro" 
-          class="bg-green-500 hover:bg-green-600 text-black px-6 py-2 rounded-lg font-semibold">
-          Cadastrar
-        </button>
-        <button id="btnCancelarFormBarbeiro" 
-          class="bg-gray-600 hover:bg-gray-700 px-6 py-2 rounded-lg font-semibold">
-          Cancelar
-        </button>
-      </div>
-    </div>
-
-    <!-- Lista de Barbeiros -->
-    <div id="listaBarbeiros" class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-      <!-- Barbeiros serão inseridos aqui -->
-</div>
-
-    <div id="mensagemVaziaBarbeiros" class="hidden text-center py-12 text-gray-400">
-      <p class="text-lg">Nenhum barbeiro cadastrado.</p>
-      <p class="text-sm mt-2">Clique em "Novo Barbeiro" para começar.</p>
-    </div>
-  </div>
   </div>
 </div>
-
 <script type="module">
 import { supabase } from './js/supabase.js'
+import { getCurrentUser, register } from './js/auth.js'
 
-let barbeariaId = null
-let todosAgendamentos = []
+let usuarioAtual = null
+let barbearia = null
+let barbeiroEditando = null
 let servicoEditando = null
+let agendamentoEditando = null
 
-// Elementos
-const userName = document.getElementById('userName')
-const barbeariaName = document.getElementById('barbeariaName')
-const btnLogout = document.getElementById('btnLogout')
-const listaAgendamentos = document.getElementById('listaAgendamentos')
-const mensagemVaziaAgendamentos = document.getElementById('mensagemVaziaAgendamentos')
-const listaServicos = document.getElementById('listaServicos')
-const mensagemVaziaServicos = document.getElementById('mensagemVaziaServicos')
-const filtroData = document.getElementById('filtroData')
-const filtroStatus = document.getElementById('filtroStatus')
-const btnLimparFiltros = document.getElementById('btnLimparFiltros')
-const statAgendamentos = document.getElementById('statAgendamentos')
-const statBarbeiros = document.getElementById('statBarbeiros')
-const statServicos = document.getElementById('statServicos')
-const statPendentes = document.getElementById('statPendentes')
-
-// Tabs
-const tabAgendamentos = document.getElementById('tabAgendamentos')
-const tabServicos = document.getElementById('tabServicos')
-const tabBarbeiros = document.getElementById('tabBarbeiros')
-const conteudoAgendamentos = document.getElementById('conteudoAgendamentos')
-const conteudoServicos = document.getElementById('conteudoServicos')
-const conteudoBarbeiros = document.getElementById('conteudoBarbeiros')
-
-// Formulário de Serviço
-const btnNovoServico = document.getElementById('btnNovoServico')
-const formServico = document.getElementById('formServico')
-const btnSalvarServico = document.getElementById('btnSalvarServico')
-const btnCancelarFormServico = document.getElementById('btnCancelarFormServico')
-const inputNomeServico = document.getElementById('inputNomeServico')
-const inputDuracaoServico = document.getElementById('inputDuracaoServico')
-const inputPrecoServico = document.getElementById('inputPrecoServico')
-const formTitleServico = document.getElementById('formTitleServico')
-
-// Formulário de Barbeiro
-const btnNovoBarbeiro = document.getElementById('btnNovoBarbeiro')
-const formBarbeiro = document.getElementById('formBarbeiro')
-const btnSalvarBarbeiro = document.getElementById('btnSalvarBarbeiro')
-const btnCancelarFormBarbeiro = document.getElementById('btnCancelarFormBarbeiro')
-const inputNomeBarbeiro = document.getElementById('inputNomeBarbeiro')
-const inputEmailBarbeiro = document.getElementById('inputEmailBarbeiro')
-const inputSenhaBarbeiro = document.getElementById('inputSenhaBarbeiro')
-const listaBarbeiros = document.getElementById('listaBarbeiros')
-const mensagemVaziaBarbeiros = document.getElementById('mensagemVaziaBarbeiros')
-
-// Carregar dados do usuário
-const { data: userData } = await supabase.auth.getUser()
-if (!userData.user) {
-  window.location.href = 'login.html'
-}
-
-const { data: profile, error: profileError } = await supabase
-  .from('profiles')
-  .select('nome, barbearia_id, role')
-  .eq('id', userData.user.id)
-  .single()
-
-let barbeariaNome = '';
-if (profile?.barbearia_id) {
-  const { data: barbearia } = await supabase
-    .from('barbearias')
-    .select('nome')
-    .eq('id', profile.barbearia_id)
-    .single();
-  barbeariaNome = barbearia?.nome || '';
-}
-
-let deveContinuar = true
-
-if (profileError) {
-  deveContinuar = false
-  // Se o erro é porque não encontrou o perfil (código PGRST116), criar um perfil básico
-  if (profileError.code === 'PGRST116' || profileError.message.includes('No rows')) {
-    alert('Perfil não encontrado. Por favor, crie uma conta primeiro.')
-    await supabase.auth.signOut()
-    window.location.href = 'register.html'
-  } else {
-    console.error('Erro ao carregar perfil:', profileError)
-    alert('Erro ao carregar perfil: ' + profileError.message)
-    await supabase.auth.signOut()
-    window.location.href = 'login.html'
-  }
-}
-
-if (!profile) {
-  deveContinuar = false
-  alert('Perfil não encontrado. Por favor, crie uma conta primeiro.')
-  await supabase.auth.signOut()
-  window.location.href = 'register.html'
-}
-
-// Elementos de configuração inicial (sempre carregar, mesmo se houver erro depois)
-const configuracaoInicial = document.getElementById('configuracaoInicial')
-const dashboardPrincipal = document.getElementById('dashboardPrincipal')
-
-// Se não deve continuar, parar aqui
-if (!deveContinuar || !profile) {
-  // Código já foi redirecionado acima, não continuar execução
-  // Mas garantir que algo seja mostrado
-  if (configuracaoInicial) configuracaoInicial.classList.remove('hidden')
-  if (dashboardPrincipal) dashboardPrincipal.classList.add('hidden')
-} else {
-userName.textContent = profile?.nome || 'Admin'
-const inputNomeBarbearia = document.getElementById('inputNomeBarbearia')
-const selectBarbeariaExistente = document.getElementById('selectBarbeariaExistente')
-const btnCriarBarbearia = document.getElementById('btnCriarBarbearia')
-const btnAssociarBarbearia = document.getElementById('btnAssociarBarbearia')
-
-// Verificar se tem barbearia (só mostrar tela de configuração se realmente não tiver e for admin)
-if (profile && profile.role === 'admin' && !profile.barbearia_id) {
-  // Mostrar tela de configuração inicial
-  if (configuracaoInicial) configuracaoInicial.classList.remove('hidden')
-  if (dashboardPrincipal) dashboardPrincipal.classList.add('hidden')
-  
-  // Variável para armazenar barbearias
-  let listaBarbearias = []
-  
-  // Carregar barbearias existentes
-  const { data: barbeariasData } = await supabase
-    .from('barbearias')
-    .select('id, nome')
-    .eq('ativo', true)
-    .order('nome')
-  
-  listaBarbearias = barbeariasData || []
-  
-  selectBarbeariaExistente.innerHTML = '<option value="">Selecione uma barbearia</option>'
-  if (listaBarbearias.length > 0) {
-    listaBarbearias.forEach(b => {
-      selectBarbeariaExistente.innerHTML += `<option value="${b.id}">${b.nome}</option>`
-    })
-  } else {
-    selectBarbeariaExistente.innerHTML = '<option value="">Nenhuma barbearia disponível</option>'
-  }
-  
-  // Criar nova barbearia
-  btnCriarBarbearia.addEventListener('click', async () => {
-    if (!inputNomeBarbearia.value.trim()) {
-      alert('Digite o nome da barbearia!')
+// Carregar dados iniciais
+async function carregarDados() {
+  try {
+    usuarioAtual = await getCurrentUser()
+    if (!usuarioAtual) {
+      window.location.href = 'router.html'
       return
     }
-    
-    const { data: novaBarbearia, error } = await supabase
-      .from('barbearias')
-      .insert({
-        nome: inputNomeBarbearia.value.trim(),
-        ativo: true
-      })
-      .select()
+
+    // Buscar perfil e barbearia
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', usuarioAtual.id)
       .single()
-    
-    if (error) {
-      alert('Erro ao criar barbearia: ' + error.message)
+
+    if (!profile || profile.role !== 'admin') {
+      alert('Acesso negado')
+      window.location.href = 'router.html'
       return
     }
+
+    const { data: barbe } = await supabase
+      .from('barbearias')
+      .select('*')
+      .eq('id', profile.barbearia_id)
+      .single()
+
+    barbearia = barbe
+    console.log('Barbearia carregada:', barbearia)
     
-    // Associar admin à barbearia
-    const { error: updateError } = await supabase
-      .from('profiles')
-      .update({ barbearia_id: novaBarbearia.id })
-      .eq('id', userData.user.id)
-    
-    if (updateError) {
-      alert('Erro ao associar barbearia: ' + updateError.message)
-      return
-    }
-    
-    // Atualizar variáveis e interface sem recarregar
-    barbeariaId = novaBarbearia.id
-    barbeariaName.textContent = novaBarbearia.nome
-    
-    // Esconder tela de configuração e mostrar dashboard
-    configuracaoInicial.classList.add('hidden')
-    dashboardPrincipal.classList.remove('hidden')
-    
-    // Inicializar dashboard
-    await carregarEstatisticas()
-    await carregarAgendamentos()
-    await carregarServicos()
+    document.getElementById('userName').textContent = profile.nome
+    document.getElementById('barbeariaName').textContent = '(' + barbe.nome + ')'
+
+    // Aguardar cada carregamento em sequência
     await carregarBarbeiros()
-    
-    alert('Barbearia criada e associada com sucesso!')
-  })
-  
-  // Associar barbearia existente
-  btnAssociarBarbearia.addEventListener('click', async () => {
-    if (!selectBarbeariaExistente.value) {
-      alert('Selecione uma barbearia!')
-      return
-    }
-    
-    const barbeariaSelecionada = listaBarbearias.find(b => b.id === selectBarbeariaExistente.value)
-    
-    const { error } = await supabase
-      .from('profiles')
-      .update({ barbearia_id: selectBarbeariaExistente.value })
-      .eq('id', userData.user.id)
-    
-    if (error) {
-      alert('Erro ao associar barbearia: ' + error.message)
-      return
-    }
-    
-    // Atualizar variáveis e interface sem recarregar
-    barbeariaId = selectBarbeariaExistente.value
-    barbeariaName.textContent = barbeariaSelecionada?.nome || ''
-    
-    // Esconder tela de configuração e mostrar dashboard
-    configuracaoInicial.classList.add('hidden')
-    dashboardPrincipal.classList.remove('hidden')
-    
-    // Inicializar dashboard
-    await carregarEstatisticas()
-    await carregarAgendamentos()
     await carregarServicos()
-    await carregarBarbeiros()
+    await carregarAgendamentos()
     
-    alert('Barbearia associada com sucesso!')
-  })
-  
+    console.log('Todos os dados carregados com sucesso')
+  } catch (error) {
+    console.error('Erro ao carregar dados:', error)
+    alert('Erro ao carregar dados: ' + error.message)
+  }
 }
 
-// Se chegou aqui e tem perfil COM barbearia, mostrar dashboard
-if (deveContinuar && profile && profile.barbearia_id) {
-  // Mostrar dashboard principal (tem barbearia)
-  if (configuracaoInicial) configuracaoInicial.classList.add('hidden')
-  if (dashboardPrincipal) dashboardPrincipal.classList.remove('hidden')
-  
-  barbeariaId = profile.barbearia_id
-  if (barbeariaName) barbeariaName.textContent = barbeariaNome || ''
-  
-  // Inicializar dashboard
-  await carregarEstatisticas()
-  await carregarAgendamentos()
-  await carregarServicos()
-  await carregarBarbeiros()
-}
+// ===== BARBEIROS =====
+async function carregarBarbeiros() {
+  try {
+    if (!barbearia || !barbearia.id) {
+      console.error('Barbearia não carregada ainda')
+      return
+    }
 
-// Carregar estatísticas
-async function carregarEstatisticas() {
-  const hoje = new Date().toISOString().split('T')[0]
-  
-  // Agendamentos hoje
-  const { count: countHoje } = await supabase
-    .from('agendamentos')
-    .select('*', { count: 'exact', head: true })
-    .eq('barbearia_id', barbeariaId)
-    .eq('data', hoje)
-  
-  // Barbeiros
-  const { count: countBarbeiros } = await supabase
-    .from('profiles')
-    .select('*', { count: 'exact', head: true })
-    .eq('barbearia_id', barbeariaId)
-    .eq('role', 'barbeiro')
-  
-  // Serviços
-  const { count: countServicos } = await supabase
-    .from('servicos')
-    .select('*', { count: 'exact', head: true })
-    .eq('barbearia_id', barbeariaId)
-  
-  // Pendentes
-  const { count: countPendentes } = await supabase
-    .from('agendamentos')
-    .select('*', { count: 'exact', head: true })
-    .eq('barbearia_id', barbeariaId)
-    .eq('status', 'pendente')
-  
-  statAgendamentos.textContent = countHoje || 0
-  statBarbeiros.textContent = countBarbeiros || 0
-  statServicos.textContent = countServicos || 0
-  statPendentes.textContent = countPendentes || 0
-}
-
-// Carregar agendamentos
-async function carregarAgendamentos() {
-const { data: agendamentos } = await supabase
-  .from('agendamentos')
-    .select(`
-      *,
-      servicos(nome, preco, duracao)
-    `)
-    .eq('barbearia_id', barbeariaId)
-    .order('data', { ascending: true })
-    .order('hora', { ascending: true })
-  
-  if (agendamentos && agendamentos.length > 0) {
-    // Buscar dados dos perfis separadamente
-    const clienteIds = [...new Set(agendamentos.map(a => a.cliente_id))]
-    const barbeiroIds = [...new Set(agendamentos.map(a => a.barbeiro_id))]
+    console.log('Iniciando carregarBarbeiros com barbearia.id:', barbearia.id)
     
-    const { data: clientes } = await supabase
+    const { data: barbeiros, error } = await supabase
       .from('profiles')
-      .select('id, nome')
-      .in('id', clienteIds)
+      .select('id, nome, role, barbearia_id')
+      .eq('barbearia_id', barbearia.id)
+      .order('nome')
+
+    console.log('carregarBarbeiros -> fetched', { barbearia_id: barbearia.id, barbeiros, error, barbeirosCount: barbeiros?.length })
+
+    if (error) {
+      console.error('Erro ao carregar barbeiros:', error)
+      document.getElementById('listaBarbeiros').innerHTML = '<p class="text-red-400">Erro ao carregar barbeiros: ' + error.message + '</p>'
+      return
+    }
+
+    document.getElementById('statBarbeiros').textContent = barbeiros?.length || 0
     
-    const { data: barbeiros } = await supabase
-      .from('profiles')
-      .select('id, nome')
-      .in('id', barbeiroIds)
+    let html = '<div class="grid gap-3">'
+    if (barbeiros && barbeiros.length > 0) {
+      console.log('Renderizando', barbeiros.length, 'barbeiros')
+      for (const barb of barbeiros) {
+        console.log('Adicionando barbeiro:', barb.nome)
+        html += `
+          <div class="bg-slate-900 p-4 rounded border border-slate-700 flex justify-between items-center">
+            <div>
+              <div class="font-semibold">${barb.nome}</div>
+              <div class="text-xs text-gray-400">ID Barbearia: ${barb.barbearia_id ? barb.barbearia_id.substring(0, 8) : 'N/A'}</div>
+            </div>
+            <div class="flex gap-2">
+              <button onclick="editarBarbeiro('${barb.id}')" class="bg-blue-600 hover:bg-blue-700 px-2 py-1 rounded text-xs">Editar</button>
+              <button onclick="deletarBarbeiro('${barb.id}')" class="bg-red-600 hover:bg-red-700 px-2 py-1 rounded text-xs">Deletar</button>
+            </div>
+          </div>
+        `
+      }
+    } else {
+      console.log('Nenhum barbeiro encontrado')
+      html += '<p class="text-gray-400">Nenhum barbeiro cadastrado</p>'
+    }
+    html += '</div>'
     
-    const clientesMap = {}
-    const barbeirosMap = {}
+    console.log('Definindo innerHTML de listaBarbeiros com', html.length, 'caracteres')
+    const elemento = document.getElementById('listaBarbeiros')
+    console.log('Elemento encontrado?', elemento ? 'SIM' : 'NÃO')
     
-    clientes?.forEach(c => clientesMap[c.id] = c)
-    barbeiros?.forEach(b => barbeirosMap[b.id] = b)
-    
-    // Adicionar dados aos agendamentos
-    agendamentos.forEach(a => {
-      a.cliente = clientesMap[a.cliente_id] || { nome: 'Não informado' }
-      a.barbeiro = barbeirosMap[a.barbeiro_id] || { nome: 'Não informado' }
-    })
+    if (elemento) {
+      elemento.innerHTML = html
+      console.log('HTML atualizado com sucesso')
+    } else {
+      console.error('Elemento listaBarbeiros não encontrado na DOM!')
+    }
+  } catch (error) {
+    console.error('Erro na função carregarBarbeiros:', error)
   }
-  
-  todosAgendamentos = agendamentos || []
-  aplicarFiltros()
 }
 
-// Aplicar filtros
-function aplicarFiltros() {
-  let agendamentosFiltrados = [...todosAgendamentos]
-  
-  if (filtroData.value) {
-    agendamentosFiltrados = agendamentosFiltrados.filter(a => a.data === filtroData.value)
-  }
-  
-  if (filtroStatus.value) {
-    agendamentosFiltrados = agendamentosFiltrados.filter(a => a.status === filtroStatus.value)
-  }
-  
-  renderizarAgendamentos(agendamentosFiltrados)
-}
+async function salvarBarbeiro() {
+  const nome = document.getElementById('barbeiroNome').value.trim()
+  const email = document.getElementById('barbeiroEmail').value.trim()
+  const senha = document.getElementById('barbeiroSenha').value
 
-// Renderizar agendamentos
-function renderizarAgendamentos(agendamentos) {
-  if (!agendamentos || agendamentos.length === 0) {
-    listaAgendamentos.classList.add('hidden')
-    mensagemVaziaAgendamentos.classList.remove('hidden')
+  if (!nome || !email) {
+    alert('Preencha nome e email')
     return
   }
-  
-  listaAgendamentos.classList.remove('hidden')
-  mensagemVaziaAgendamentos.classList.add('hidden')
-  
-  listaAgendamentos.innerHTML = ''
 
-agendamentos.forEach(a => {
-    const dataFormatada = new Date(a.data + 'T00:00:00').toLocaleDateString('pt-BR')
-    const servico = a.servicos || {}
-    const cliente = a.cliente || {}
-    const barbeiro = a.barbeiro || {}
-    
-    const statusClass = {
-      'confirmado': 'bg-green-500/20 text-green-400 border-green-500/30',
-      'cancelado': 'bg-red-500/20 text-red-400 border-red-500/30',
-      'concluido': 'bg-blue-500/20 text-blue-400 border-blue-500/30',
-      'pendente': 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30'
-    }[a.status] || 'bg-gray-500/20 text-gray-400 border-gray-500/30'
-    
-    listaAgendamentos.innerHTML += `
-      <div class="bg-slate-900 p-6 rounded-xl border ${statusClass.split(' ')[2]} hover:border-opacity-60 transition">
-        <div class="flex justify-between items-start mb-4">
-          <div>
-            <h3 class="text-xl font-bold mb-1">${cliente.nome || 'Cliente não informado'}</h3>
-            <p class="text-gray-400">${servico.nome || 'Serviço não informado'}</p>
-          </div>
-          <span class="px-3 py-1 rounded-full text-sm font-medium ${statusClass}">
-            ${a.status || 'pendente'}
-          </span>
-        </div>
-        
-        <div class="grid md:grid-cols-2 gap-4 mb-4 text-gray-300">
-          <div>
-            <span class="text-gray-500">📅 Data:</span> ${dataFormatada}
-          </div>
-          <div>
-            <span class="text-gray-500">⏰ Hora:</span> ${a.hora}
-          </div>
-          <div>
-            <span class="text-gray-500">💇 Barbeiro:</span> ${barbeiro.nome || 'Não informado'}
-          </div>
-          <div>
-            <span class="text-gray-500">💰 Valor:</span> R$ ${parseFloat(servico.preco || 0).toFixed(2)}
-          </div>
-        </div>
-      </div>
-    `
-  })
+  if (!barbearia || !barbearia.id) {
+    alert('Barbearia não carregada. Recarregue a página.')
+    return
+  }
+
+  try {
+    if (barbeiroEditando) {
+      // Editar apenas nome
+      const { error } = await supabase
+        .from('profiles')
+        .update({ nome })
+        .eq('id', barbeiroEditando)
+
+      if (error) throw error
+      alert('Barbeiro atualizado com sucesso!')
+    } else {
+      // Criar novo barbeiro
+      if (!senha) {
+        alert('Informe uma senha para o novo barbeiro')
+        return
+      }
+
+      console.log('Registrando barbeiro com dados:', {
+        nome,
+        email,
+        role: 'barbeiro',
+        barbearia_id: barbearia.id
+      })
+
+      const { error } = await register(email, senha, {
+        nome,
+        role: 'barbeiro',
+        barbearia_id: barbearia.id
+      })
+
+      if (error) {
+        console.error('Erro ao registrar:', error)
+        throw error
+      }
+
+      // Aguarda um pouco para garantir que o trigger criou o profile
+      await new Promise(resolve => setTimeout(resolve, 1000))
+
+      alert('Barbeiro cadastrado com sucesso!')
+    }
+
+    document.getElementById('formNovoBarbeiro').classList.add('hidden')
+    document.getElementById('barbeiroNome').value = ''
+    document.getElementById('barbeiroEmail').value = ''
+    document.getElementById('barbeiroSenha').value = ''
+    barbeiroEditando = null
+    await carregarBarbeiros()
+  } catch (error) {
+    console.error('Erro:', error)
+    alert('Erro: ' + (error.message || 'Verifique o console'))
+  }
 }
 
-// Carregar serviços
+window.editarBarbeiro = async (id) => {
+  const { data: barb } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('id', id)
+    .single()
+
+  barbeiroEditando = id
+  document.getElementById('barbeiroNome').value = barb.nome || ''
+  document.getElementById('barbeiroEmail').value = '(Não editável)'
+  document.getElementById('barbeiroEmail').disabled = true
+  document.getElementById('barbeiroSenha').style.display = 'none'
+  document.getElementById('barbeiroSenhaLabel').style.display = 'none'
+  document.getElementById('formNovoBarbeiro').classList.remove('hidden')
+}
+
+window.deletarBarbeiro = async (id) => {
+  if (!confirm('Tem certeza que deseja deletar este barbeiro?')) return
+  
+  try {
+    // Apenas marca como inativo no profile (não delete para manter histórico)
+    const { error } = await supabase
+      .from('profiles')
+      .update({ role: 'inativo' })
+      .eq('id', id)
+
+    if (error) throw error
+    alert('Barbeiro removido com sucesso!')
+    carregarBarbeiros()
+  } catch (error) {
+    alert('Erro: ' + error.message)
+  }
+}
+
+// ===== SERVIÇOS =====
 async function carregarServicos() {
   const { data: servicos } = await supabase
     .from('servicos')
     .select('*')
-    .eq('barbearia_id', barbeariaId)
+    .eq('barbearia_id', barbearia.id)
     .order('nome')
-  
-  if (!servicos || servicos.length === 0) {
-    listaServicos.classList.add('hidden')
-    mensagemVaziaServicos.classList.remove('hidden')
-    return
-  }
-  
-  listaServicos.classList.remove('hidden')
-  mensagemVaziaServicos.classList.add('hidden')
-  
-  listaServicos.innerHTML = ''
-  
-  servicos.forEach(s => {
-    listaServicos.innerHTML += `
-      <div class="bg-slate-900 p-6 rounded-xl border border-slate-800 hover:border-slate-700 transition">
-        <h3 class="text-xl font-bold mb-2">${s.nome}</h3>
-        <div class="space-y-2 text-gray-300 mb-4">
-          <div><span class="text-gray-500">⏱️ Duração:</span> ${s.duracao} minutos</div>
-          <div><span class="text-gray-500">💰 Preço:</span> R$ ${parseFloat(s.preco).toFixed(2)}</div>
-        </div>
-        <div class="flex gap-3">
-          <button onclick="editarServico('${s.id}', '${s.nome.replace(/'/g, "\\'")}', ${s.duracao}, ${s.preco})" 
-            class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg text-sm font-semibold">
-            Editar
-          </button>
-          <button onclick="excluirServico('${s.id}')" 
-            class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg text-sm font-semibold">
-            Excluir
-          </button>
-        </div>
-      </div>
-    `
-  })
-}
 
-// Funções globais
-window.editarServico = (id, nome, duracao, preco) => {
-  servicoEditando = id
-  formTitleServico.textContent = 'Editar Serviço'
-  formServico.classList.remove('hidden')
-  inputNomeServico.value = nome
-  inputDuracaoServico.value = duracao
-  inputPrecoServico.value = preco
-  window.scrollTo({ top: 0, behavior: 'smooth' })
-}
+  document.getElementById('statServicos').textContent = servicos?.length || 0
 
-window.excluirServico = async (id) => {
-  if (!confirm('Tem certeza que deseja excluir este serviço?')) return
-  
-  const { error } = await supabase
-    .from('servicos')
-    .delete()
-    .eq('id', id)
-  
-  if (error) {
-    alert('Erro ao excluir serviço: ' + error.message)
-    return
-  }
-  
-  alert('Serviço excluído com sucesso!')
-  await carregarServicos()
-  await carregarEstatisticas()
-}
-
-// Carregar barbeiros
-async function carregarBarbeiros() {
-  const { data: barbeiros } = await supabase
-    .from('profiles')
-    .select('id, nome')
-    .eq('barbearia_id', barbeariaId)
-    .eq('role', 'barbeiro')
-    .order('nome')
-  
-  if (!barbeiros || barbeiros.length === 0) {
-    listaBarbeiros.classList.add('hidden')
-    mensagemVaziaBarbeiros.classList.remove('hidden')
-    return
-  }
-  
-  listaBarbeiros.classList.remove('hidden')
-  mensagemVaziaBarbeiros.classList.add('hidden')
-  
-  listaBarbeiros.innerHTML = ''
-  
-  barbeiros.forEach(b => {
-    const linkAgendamento = `${window.location.origin}${window.location.pathname.replace('admin.html', 'agendar.html')}?barbeiro=${b.id}`
-    
-    listaBarbeiros.innerHTML += `
-      <div class="bg-slate-900 p-6 rounded-xl border border-slate-800 hover:border-slate-700 transition">
-        <h3 class="text-xl font-bold mb-2">${b.nome}</h3>
-        <div class="space-y-2 text-gray-300 mb-4">
-          <div class="bg-slate-800 p-3 rounded-lg border border-slate-700">
-            <div class="text-xs text-gray-400 mb-1">Link de Agendamento:</div>
-            <div class="flex items-center gap-2">
-              <input type="text" value="${linkAgendamento}" readonly 
-                class="flex-1 bg-slate-900 text-sm p-2 rounded border border-slate-700 text-gray-300">
-              <button onclick="copiarLink('${linkAgendamento}')" 
-                class="bg-blue-600 hover:bg-blue-700 px-3 py-2 rounded text-sm font-semibold">
-                Copiar
-              </button>
+  let html = '<div class="grid gap-3">'
+  if (servicos && servicos.length > 0) {
+    for (const srv of servicos) {
+      html += `
+        <div class="bg-slate-900 p-4 rounded border border-slate-700">
+          <div class="flex justify-between items-start mb-2">
+            <div>
+              <div class="font-semibold">${srv.nome}</div>
+              <div class="text-sm text-gray-400">⏱️ ${srv.duracao} min | 💰 R$ ${srv.preco}</div>
+            </div>
+            <div class="flex gap-2">
+              <button onclick="editarServico('${srv.id}')" class="bg-blue-600 hover:bg-blue-700 px-2 py-1 rounded text-xs">Editar</button>
+              <button onclick="deletarServico('${srv.id}')" class="bg-red-600 hover:bg-red-700 px-2 py-1 rounded text-xs">Deletar</button>
             </div>
           </div>
         </div>
-        <div class="flex gap-3">
-          <button onclick="excluirBarbeiro('${b.id}', '${b.nome.replace(/'/g, "\\'")}')" 
-            class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg text-sm font-semibold">
-            Excluir
-          </button>
-        </div>
-    </div>
-  `
-})
-}
-
-// Função para copiar link
-window.copiarLink = async (link) => {
-  try {
-    await navigator.clipboard.writeText(link)
-    alert('Link copiado para a área de transferência!')
-  } catch (err) {
-    // Fallback para navegadores antigos
-    const input = document.createElement('input')
-    input.value = link
-    document.body.appendChild(input)
-    input.select()
-    document.execCommand('copy')
-    document.body.removeChild(input)
-    alert('Link copiado para a área de transferência!')
-  }
-}
-
-// Funções globais
-window.excluirBarbeiro = async (id, nome) => {
-  if (!confirm(`Tem certeza que deseja excluir o barbeiro "${nome}"? Esta ação não pode ser desfeita.`)) return
-  
-  const { error } = await supabase
-    .from('profiles')
-    .delete()
-    .eq('id', id)
-  
-  if (error) {
-    alert('Erro ao excluir barbeiro: ' + error.message)
-    return
-  }
-  
-  alert('Barbeiro excluído com sucesso!')
-  await carregarBarbeiros()
-  await carregarEstatisticas()
-}
-
-// Event listeners - Tabs
-tabAgendamentos.addEventListener('click', () => {
-  tabAgendamentos.classList.add('active', 'border-green-500')
-  tabServicos.classList.remove('active', 'border-green-500')
-  tabBarbeiros.classList.remove('active', 'border-green-500')
-  conteudoAgendamentos.classList.remove('hidden')
-  conteudoServicos.classList.add('hidden')
-  conteudoBarbeiros.classList.add('hidden')
-})
-
-tabServicos.addEventListener('click', () => {
-  tabServicos.classList.add('active', 'border-green-500')
-  tabAgendamentos.classList.remove('active', 'border-green-500')
-  tabBarbeiros.classList.remove('active', 'border-green-500')
-  conteudoServicos.classList.remove('hidden')
-  conteudoAgendamentos.classList.add('hidden')
-  conteudoBarbeiros.classList.add('hidden')
-})
-
-tabBarbeiros.addEventListener('click', () => {
-  tabBarbeiros.classList.add('active', 'border-green-500')
-  tabAgendamentos.classList.remove('active', 'border-green-500')
-  tabServicos.classList.remove('active', 'border-green-500')
-  conteudoBarbeiros.classList.remove('hidden')
-  conteudoAgendamentos.classList.add('hidden')
-  conteudoServicos.classList.add('hidden')
-})
-
-// Event listeners - Filtros
-filtroData.addEventListener('change', aplicarFiltros)
-filtroStatus.addEventListener('change', aplicarFiltros)
-btnLimparFiltros.addEventListener('click', () => {
-  filtroData.value = ''
-  filtroStatus.value = ''
-  aplicarFiltros()
-})
-
-// Event listeners - Serviços
-btnNovoServico.addEventListener('click', () => {
-  servicoEditando = null
-  formTitleServico.textContent = 'Novo Serviço'
-  formServico.classList.remove('hidden')
-  inputNomeServico.value = ''
-  inputDuracaoServico.value = ''
-  inputPrecoServico.value = ''
-  window.scrollTo({ top: 0, behavior: 'smooth' })
-})
-
-btnCancelarFormServico.addEventListener('click', () => {
-  formServico.classList.add('hidden')
-  servicoEditando = null
-})
-
-btnSalvarServico.addEventListener('click', async () => {
-  if (!inputNomeServico.value || !inputDuracaoServico.value || !inputPrecoServico.value) {
-    alert('Preencha todos os campos!')
-    return
-  }
-  
-  const dados = {
-    nome: inputNomeServico.value,
-    duracao: parseInt(inputDuracaoServico.value),
-    preco: parseFloat(inputPrecoServico.value),
-    barbearia_id: barbeariaId
-  }
-  
-  let error
-  
-  if (servicoEditando) {
-    const { error: updateError } = await supabase
-      .from('servicos')
-      .update(dados)
-      .eq('id', servicoEditando)
-    error = updateError
+      `
+    }
   } else {
-    const { error: insertError } = await supabase
+    html += '<p class="text-gray-400">Nenhum serviço cadastrado</p>'
+  }
+  html += '</div>'
+  document.getElementById('listaServicos').innerHTML = html
+}
+
+async function salvarServico() {
+  const nome = document.getElementById('servicoNome').value.trim()
+  const duracao = parseInt(document.getElementById('servicoDuracao').value)
+  const preco = parseFloat(document.getElementById('servicoPreco').value)
+
+  if (!nome || !duracao || !preco) {
+    alert('Preencha todos os campos corretamente')
+    return
+  }
+
+  try {
+    if (servicoEditando) {
+      const { error } = await supabase
+        .from('servicos')
+        .update({ nome, duracao, preco })
+        .eq('id', servicoEditando)
+
+      if (error) throw error
+      alert('Serviço atualizado com sucesso!')
+    } else {
+      const { error } = await supabase
+        .from('servicos')
+        .insert([{ barbearia_id: barbearia.id, nome, duracao, preco }])
+
+      if (error) throw error
+      alert('Serviço criado com sucesso!')
+    }
+
+    document.getElementById('formNovoServico').classList.add('hidden')
+    document.getElementById('servicoNome').value = ''
+    document.getElementById('servicoDuracao').value = ''
+    document.getElementById('servicoPreco').value = ''
+    servicoEditando = null
+    carregarServicos()
+  } catch (error) {
+    alert('Erro: ' + error.message)
+  }
+}
+
+window.editarServico = async (id) => {
+  const { data: srv } = await supabase
+    .from('servicos')
+    .select('*')
+    .eq('id', id)
+    .single()
+
+  servicoEditando = id
+  document.getElementById('servicoNome').value = srv.nome
+  document.getElementById('servicoDuracao').value = srv.duracao
+  document.getElementById('servicoPreco').value = srv.preco
+  document.getElementById('formNovoServico').classList.remove('hidden')
+}
+
+window.deletarServico = async (id) => {
+  if (!confirm('Deletar este serviço?')) return
+  
+  try {
+    const { error } = await supabase
       .from('servicos')
-      .insert(dados)
-    error = insertError
+      .delete()
+      .eq('id', id)
+
+    if (error) throw error
+    carregarServicos()
+  } catch (error) {
+    alert('Erro: ' + error.message)
   }
-  
-  if (error) {
-    alert('Erro ao salvar serviço: ' + error.message)
+}
+
+// ===== AGENDAMENTOS =====
+async function carregarAgendamentos() {
+  const hoje = new Date().toISOString().split('T')[0]
+  const { data: agendamentos } = await supabase
+    .from('agendamentos')
+    .select('*, servicos(nome, preco), profiles!agendamentos_cliente_id_fkey(nome)')
+    .eq('barbearia_id', barbearia.id)
+    .gte('data', hoje)
+    .order('data', { ascending: true })
+    .order('hora', { ascending: true })
+
+  document.getElementById('statAgendamentos').textContent = agendamentos?.length || 0
+  document.getElementById('statPendentes').textContent = agendamentos?.filter(a => a.status === 'pendente').length || 0
+
+  let html = '<div class="grid gap-3">'
+  if (agendamentos && agendamentos.length > 0) {
+    for (const age of agendamentos) {
+      const dataFormatada = new Date(age.data).toLocaleDateString('pt-BR')
+      const statusCores = {
+        pendente: 'yellow',
+        confirmado: 'green',
+        concluido: 'blue',
+        cancelado: 'red'
+      }
+      const corStatus = statusCores[age.status] || 'gray'
+
+      html += `
+        <div class="bg-slate-900 p-4 rounded border border-slate-700">
+          <div class="flex justify-between items-start mb-2">
+            <div>
+              <div class="font-semibold">${age.profiles?.nome || 'Cliente'}</div>
+              <div class="text-sm text-gray-400">${age.servicos?.nome || 'Serviço'} | ${dataFormatada} ${age.hora}</div>
+            </div>
+            <div class="flex gap-2">
+              <button onclick="editarAgendamento('${age.id}')" class="bg-blue-600 hover:bg-blue-700 px-2 py-1 rounded text-xs">Editar</button>
+              <button onclick="deletarAgendamento('${age.id}')" class="bg-red-600 hover:bg-red-700 px-2 py-1 rounded text-xs">Deletar</button>
+            </div>
+          </div>
+          <span class="text-xs bg-${corStatus}-900 px-2 py-1 rounded">${age.status}</span>
+        </div>
+      `
+    }
+  } else {
+    html += '<p class="text-gray-400">Nenhum agendamento próximo</p>'
+  }
+  html += '</div>'
+  document.getElementById('listaAgendamentos').innerHTML = html
+}
+
+async function salvarAgendamento() {
+  const clienteId = document.getElementById('agendamentoCliente').value
+  const barbeiroId = document.getElementById('agendamentoBarbeiro').value
+  const servicoId = document.getElementById('agendamentoServico').value
+  const data = document.getElementById('agendamentoData').value
+  const hora = document.getElementById('agendamentoHora').value
+
+  if (!clienteId || !barbeiroId || !servicoId || !data || !hora) {
+    alert('Preencha todos os campos')
     return
   }
+
+  try {
+    const dados = {
+      barbearia_id: barbearia.id,
+      cliente_id: clienteId,
+      barbeiro_id: barbeiroId,
+      servico_id: servicoId,
+      data,
+      hora,
+      status: 'pendente'
+    }
+
+    if (agendamentoEditando) {
+      const { error } = await supabase
+        .from('agendamentos')
+        .update(dados)
+        .eq('id', agendamentoEditando)
+
+      if (error) throw error
+      alert('Agendamento atualizado!')
+    } else {
+      const { error } = await supabase
+        .from('agendamentos')
+        .insert([dados])
+
+      if (error) throw error
+      alert('Agendamento criado!')
+    }
+
+    document.getElementById('formNovoAgendamento').classList.add('hidden')
+    agendamentoEditando = null
+    carregarAgendamentos()
+    limparFormAgendamento()
+  } catch (error) {
+    alert('Erro: ' + error.message)
+  }
+}
+
+window.editarAgendamento = async (id) => {
+  const { data: age } = await supabase
+    .from('agendamentos')
+    .select('*')
+    .eq('id', id)
+    .single()
+
+  agendamentoEditando = id
+  document.getElementById('agendamentoCliente').value = age.cliente_id
+  document.getElementById('agendamentoBarbeiro').value = age.barbeiro_id
+  document.getElementById('agendamentoServico').value = age.servico_id
+  document.getElementById('agendamentoData').value = age.data
+  document.getElementById('agendamentoHora').value = age.hora
+  document.getElementById('formNovoAgendamento').classList.remove('hidden')
+}
+
+window.deletarAgendamento = async (id) => {
+  if (!confirm('Deletar este agendamento?')) return
   
-  alert(servicoEditando ? 'Serviço atualizado com sucesso!' : 'Serviço criado com sucesso!')
-  formServico.classList.add('hidden')
+  try {
+    const { error } = await supabase
+      .from('agendamentos')
+      .delete()
+      .eq('id', id)
+
+    if (error) throw error
+    carregarAgendamentos()
+  } catch (error) {
+    alert('Erro: ' + error.message)
+  }
+}
+
+function limparFormAgendamento() {
+  document.getElementById('agendamentoCliente').value = ''
+  document.getElementById('agendamentoBarbeiro').value = ''
+  document.getElementById('agendamentoServico').value = ''
+  document.getElementById('agendamentoData').value = ''
+  document.getElementById('agendamentoHora').value = ''
+}
+
+// ===== TABS =====
+document.getElementById('tabAgendamentos').onclick = () => {
+  document.getElementById('conteudoAgendamentos').classList.remove('hidden')
+  document.getElementById('conteudoServicos').classList.add('hidden')
+  document.getElementById('conteudoBarbeiros').classList.add('hidden')
+  document.getElementById('tabAgendamentos').classList.add('border-green-500')
+  document.getElementById('tabServicos').classList.remove('border-green-500')
+  document.getElementById('tabBarbeiros').classList.remove('border-green-500')
+}
+
+document.getElementById('tabServicos').onclick = () => {
+  document.getElementById('conteudoAgendamentos').classList.add('hidden')
+  document.getElementById('conteudoServicos').classList.remove('hidden')
+  document.getElementById('conteudoBarbeiros').classList.add('hidden')
+  document.getElementById('tabAgendamentos').classList.remove('border-green-500')
+  document.getElementById('tabServicos').classList.add('border-green-500')
+  document.getElementById('tabBarbeiros').classList.remove('border-green-500')
+}
+
+document.getElementById('tabBarbeiros').onclick = () => {
+  document.getElementById('conteudoAgendamentos').classList.add('hidden')
+  document.getElementById('conteudoServicos').classList.add('hidden')
+  document.getElementById('conteudoBarbeiros').classList.remove('hidden')
+  document.getElementById('tabAgendamentos').classList.remove('border-green-500')
+  document.getElementById('tabServicos').classList.remove('border-green-500')
+  document.getElementById('tabBarbeiros').classList.add('border-green-500')
+}
+
+// ===== MODAIS =====
+document.getElementById('btnNovoAgendamento').onclick = () => {
+  agendamentoEditando = null
+  limparFormAgendamento()
+  carregarClientesBarbeirosServicos()
+  document.getElementById('formNovoAgendamento').classList.remove('hidden')
+}
+
+document.getElementById('cancelarAgendamento').onclick = () => {
+  document.getElementById('formNovoAgendamento').classList.add('hidden')
+  agendamentoEditando = null
+}
+
+document.getElementById('btnNovoServico').onclick = () => {
   servicoEditando = null
-  await carregarServicos()
-  await carregarEstatisticas()
-})
+  document.getElementById('servicoNome').value = ''
+  document.getElementById('servicoDuracao').value = ''
+  document.getElementById('servicoPreco').value = ''
+  document.getElementById('barbeiroEmail').disabled = false
+  document.getElementById('barbeiroSenha').style.display = 'block'
+  document.getElementById('barbeiroSenhaLabel').style.display = 'block'
+  document.getElementById('formNovoServico').classList.remove('hidden')
+}
 
-// Event listeners - Barbeiros
-btnNovoBarbeiro.addEventListener('click', () => {
-  formBarbeiro.classList.remove('hidden')
-  inputNomeBarbeiro.value = ''
-  inputEmailBarbeiro.value = ''
-  inputSenhaBarbeiro.value = ''
-  window.scrollTo({ top: 0, behavior: 'smooth' })
-})
+document.getElementById('cancelarServico').onclick = () => {
+  document.getElementById('formNovoServico').classList.add('hidden')
+  servicoEditando = null
+}
 
-btnCancelarFormBarbeiro.addEventListener('click', () => {
-  formBarbeiro.classList.add('hidden')
-})
+document.getElementById('btnNovoBarbeiro').onclick = () => {
+  barbeiroEditando = null
+  document.getElementById('barbeiroNome').value = ''
+  document.getElementById('barbeiroEmail').value = ''
+  document.getElementById('barbeiroSenha').value = ''
+  document.getElementById('barbeiroEmail').disabled = false
+  document.getElementById('barbeiroSenha').style.display = 'block'
+  document.getElementById('barbeiroSenhaLabel').style.display = 'block'
+  document.getElementById('formNovoBarbeiro').classList.remove('hidden')
+}
 
-btnSalvarBarbeiro.addEventListener('click', async () => {
-  if (!inputNomeBarbeiro.value.trim() || !inputEmailBarbeiro.value.trim() || !inputSenhaBarbeiro.value.trim()) {
-    alert('Preencha todos os campos!')
-    return
-  }
-  
-  if (inputSenhaBarbeiro.value.length < 6) {
-    alert('A senha deve ter no mínimo 6 caracteres!')
-    return
-  }
-  
-  // Criar usuário via signup (método disponível no cliente)
-  const { data: authData, error: authError } = await supabase.auth.signUp({
-    email: inputEmailBarbeiro.value.trim(),
-    password: inputSenhaBarbeiro.value
-  })
-  
-  if (authError) {
-    alert('Erro ao criar usuário: ' + authError.message)
-    return
-  }
-  
-  if (!authData.user) {
-    alert('Erro: usuário não foi criado')
-    return
-  }
-  
-  // Criar perfil
-  const { error: profileError } = await supabase
+document.getElementById('cancelarBarbeiro').onclick = () => {
+  document.getElementById('formNovoBarbeiro').classList.add('hidden')
+  barbeiroEditando = null
+}
+
+document.getElementById('salvarServico').onclick = salvarServico
+document.getElementById('salvarBarbeiro').onclick = salvarBarbeiro
+document.getElementById('salvarAgendamento').onclick = salvarAgendamento
+
+async function carregarClientesBarbeirosServicos() {
+  // Clientes
+  const { data: clientes } = await supabase
     .from('profiles')
-    .insert({
-      id: authData.user.id,
-      nome: inputNomeBarbeiro.value.trim(),
-      role: 'barbeiro',
-      barbearia_id: barbeariaId
-    })
+    .select('id, nome')
+    .eq('role', 'cliente')
+    .order('nome')
   
-  if (profileError) {
-    alert('Erro ao criar perfil: ' + profileError.message + '\nO usuário foi criado mas o perfil não. Entre em contato com o suporte.')
-    return
-  }
-  
-  alert('Barbeiro cadastrado com sucesso!')
-  formBarbeiro.classList.add('hidden')
-  inputNomeBarbeiro.value = ''
-  inputEmailBarbeiro.value = ''
-  inputSenhaBarbeiro.value = ''
-  await carregarBarbeiros()
-  await carregarEstatisticas()
-})
+  let html = '<option value="">Selecione um cliente</option>'
+  clientes?.forEach(c => {
+    html += `<option value="${c.id}">${c.nome}</option>`
+  })
+  document.getElementById('agendamentoCliente').innerHTML = html
 
-btnLogout.addEventListener('click', async () => {
+  // Barbeiros
+  const { data: barbeiros } = await supabase
+    .from('profiles')
+    .select('id, nome')
+    .eq('barbearia_id', barbearia.id)
+    .eq('role', 'barbeiro')
+    .order('nome')
+  
+  html = '<option value="">Selecione um barbeiro</option>'
+  barbeiros?.forEach(b => {
+    html += `<option value="${b.id}">${b.nome}</option>`
+  })
+  document.getElementById('agendamentoBarbeiro').innerHTML = html
+
+  // Serviços
+  const { data: servicos } = await supabase
+    .from('servicos')
+    .select('id, nome, preco')
+    .eq('barbearia_id', barbearia.id)
+    .order('nome')
+  
+  html = '<option value="">Selecione um serviço</option>'
+  servicos?.forEach(s => {
+    html += `<option value="${s.id}">${s.nome} (R$ ${s.preco})</option>`
+  })
+  document.getElementById('agendamentoServico').innerHTML = html
+
+  // Data mínima = hoje
+  const hoje = new Date().toISOString().split('T')[0]
+  document.getElementById('agendamentoData').min = hoje
+}
+
+document.getElementById('btnLogout').onclick = async () => {
   await supabase.auth.signOut()
   window.location.href = 'login.html'
-})
-
-// Inicialização já foi feita acima quando verificamos se tem barbearia
 }
-</script>
 
+// Carregar dados ao iniciar
+carregarDados()
+</script>
 </body>
 </html>

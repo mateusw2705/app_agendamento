@@ -146,8 +146,224 @@ async function carregarBarbearias() {
 // Carregar barbeiros da barbearia selecionada
 async function carregarBarbeiros(barbeariaId) {
   selectBarbeiro.disabled = !barbeariaId
+  selectServico.disabled = !barbeariaId
+  
   if (!barbeariaId) {
     selectBarbeiro.innerHTML = '<option value="">Selecione um barbeiro</option>'
+    selectServico.innerHTML = '<option value="">Selecione um serviço</option>'
+    return
+  }
+
+  const { data } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('barbearia_id', barbeariaId)
+    .eq('role', 'barbeiro')
+    .order('nome')
+  
+  barbeiros = data || []
+  selectBarbeiro.innerHTML = '<option value="">Selecione um barbeiro</option>'
+  barbeiros.forEach(b => {
+    selectBarbeiro.innerHTML += `<option value="${b.id}">${b.nome}</option>`
+  })
+
+  carregarServicos(barbeariaId)
+}
+
+// Carregar serviços da barbearia
+async function carregarServicos(barbeariaId) {
+  const { data } = await supabase
+    .from('servicos')
+    .select('*')
+    .eq('barbearia_id', barbeariaId)
+    .order('nome')
+  
+  servicos = data || []
+  selectServico.innerHTML = '<option value="">Selecione um serviço</option>'
+  servicos.forEach(s => {
+    selectServico.innerHTML += `<option value="${s.id}">${s.nome} (R$ ${s.preco})</option>`
+  })
+}
+
+// Carregar agendamentos do cliente
+async function carregarAgendamentos() {
+  const { data: agendamentos } = await supabase
+    .from('agendamentos')
+    .select('*, barbearias(nome), barbeiros:profiles!barbeiro_id(nome), servicos(nome, preco)')
+    .eq('cliente_id', userData.user.id)
+    .gte('data', new Date().toISOString().split('T')[0])
+    .order('data', { ascending: true })
+    .order('hora', { ascending: true })
+
+  if (!agendamentos || agendamentos.length === 0) {
+    listaAgendamentos.innerHTML = ''
+    mensagemVazia.classList.remove('hidden')
+    return
+  }
+
+  mensagemVazia.classList.add('hidden')
+  
+  let html = ''
+  for (const age of agendamentos) {
+    const statusCores = {
+      pendente: 'yellow',
+      confirmado: 'green',
+      concluido: 'blue',
+      cancelado: 'red'
+    }
+    const corStatus = statusCores[age.status] || 'gray'
+    const dataFormatada = new Date(age.data).toLocaleDateString('pt-BR')
+    
+    html += `
+      <div class="bg-slate-900 p-4 rounded-xl border border-slate-700 hover:border-green-500 transition">
+        <div class="flex justify-between items-start mb-3">
+          <div class="flex-1">
+            <div class="text-gray-400 text-sm">${age.barbearias?.nome}</div>
+            <div class="font-bold text-lg mb-2">${age.servicos?.nome}</div>
+            <div class="text-sm text-gray-400">
+              <span>📅 ${dataFormatada}</span>
+              <span class="ml-4">🕐 ${age.hora}</span>
+            </div>
+          </div>
+          <div class="text-right">
+            <div class="text-2xl font-bold text-green-400">R$ ${age.servicos?.preco}</div>
+            <span class="text-xs bg-${corStatus}-900 text-${corStatus}-200 px-2 py-1 rounded inline-block mt-2">${age.status}</span>
+          </div>
+        </div>
+        
+        ${age.status === 'pendente' || age.status === 'confirmado' ? `
+          <div class="flex gap-2 border-t border-slate-700 pt-3 mt-3">
+            <button onclick="editarAgendamento('${age.id}')" class="flex-1 bg-blue-600 hover:bg-blue-700 px-3 py-2 rounded text-sm font-semibold">
+              Editar
+            </button>
+            <button onclick="cancelarAgendamento('${age.id}')" class="flex-1 bg-red-600 hover:bg-red-700 px-3 py-2 rounded text-sm font-semibold">
+              Cancelar
+            </button>
+          </div>
+        ` : ''}
+      </div>
+    `
+  }
+  
+  listaAgendamentos.innerHTML = html
+}
+
+// Event listeners
+btnNovoAgendamento.addEventListener('click', () => {
+  agendamentoEditando = null
+  formTitle.textContent = 'Novo Agendamento'
+  selectBarbearia.value = ''
+  selectBarbeiro.value = ''
+  selectServico.value = ''
+  inputData.value = ''
+  inputHora.value = ''
+  selectBarbeiro.disabled = true
+  selectServico.disabled = true
+  formAgendamento.classList.remove('hidden')
+})
+
+btnCancelarForm.addEventListener('click', () => {
+  agendamentoEditando = null
+  formAgendamento.classList.add('hidden')
+})
+
+selectBarbearia.addEventListener('change', (e) => {
+  carregarBarbeiros(e.target.value)
+})
+
+// Editar agendamento
+window.editarAgendamento = async (id) => {
+  const { data: age } = await supabase
+    .from('agendamentos')
+    .select('*')
+    .eq('id', id)
+    .single()
+  
+  agendamentoEditando = id
+  formTitle.textContent = 'Editar Agendamento'
+  selectBarbearia.value = age.barbearia_id
+  await carregarBarbeiros(age.barbearia_id)
+  selectBarbeiro.value = age.barbeiro_id
+  selectServico.value = age.servico_id
+  inputData.value = age.data
+  inputHora.value = age.hora
+  formAgendamento.classList.remove('hidden')
+}
+
+// Cancelar agendamento
+window.cancelarAgendamento = async (id) => {
+  if (!confirm('Tem certeza que deseja cancelar este agendamento?')) return
+  
+  const { error } = await supabase
+    .from('agendamentos')
+    .update({ status: 'cancelado' })
+    .eq('id', id)
+  
+  if (error) {
+    alert('Erro ao cancelar: ' + error.message)
+    return
+  }
+  
+  alert('Agendamento cancelado com sucesso!')
+  carregarAgendamentos()
+}
+
+// Salvar agendamento
+btnSalvarAgendamento.addEventListener('click', async () => {
+  if (!selectBarbearia.value || !selectBarbeiro.value || !selectServico.value || !inputData.value || !inputHora.value) {
+    alert('Preencha todos os campos')
+    return
+  }
+
+  const dados = {
+    barbearia_id: selectBarbearia.value,
+    barbeiro_id: selectBarbeiro.value,
+    servico_id: selectServico.value,
+    data: inputData.value,
+    hora: inputHora.value,
+    status: 'pendente'
+  }
+  
+  let error
+
+  if (agendamentoEditando) {
+    const { error: updateError } = await supabase
+      .from('agendamentos')
+      .update(dados)
+      .eq('id', agendamentoEditando)
+    error = updateError
+  } else {
+    dados.cliente_id = userData.user.id
+    const { error: insertError } = await supabase
+      .from('agendamentos')
+      .insert([dados])
+    error = insertError
+  }
+
+  if (error) {
+    alert('Erro ao salvar agendamento: ' + error.message)
+    return
+  }
+
+  alert(agendamentoEditando ? 'Agendamento atualizado com sucesso!' : 'Agendamento criado com sucesso!')
+  formAgendamento.classList.add('hidden')
+  agendamentoEditando = null
+  carregarAgendamentos()
+})
+
+btnLogout.addEventListener('click', async () => {
+  await supabase.auth.signOut()
+  window.location.href = 'login.html'
+})
+
+// Inicializar
+carregarBarbearias()
+carregarAgendamentos()
+
+</script>
+
+</body>
+</html>
     return
   }
   

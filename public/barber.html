@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Barbeiro | AgendaBarber</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
+  <style>
+    .fc { color: white; }
+    .fc-theme-standard td, .fc-theme-standard th { border-color: rgb(51 65 85); }
+    .fc-theme-standard .fc-scrollgrid { border-color: rgb(51 65 85); }
+    .fc-button-primary { background-color: rgb(34 197 94) !important; border-color: rgb(34 197 94) !important; color: black !important; }
+    .fc-button-primary:hover { background-color: rgb(22 163 74) !important; }
+    .fc-daygrid-day-number { color: white; }
+    .fc-col-header-cell-cushion { color: white; }
+  </style>
+</head>
+<body class="bg-slate-950 text-white min-h-screen">
+
+<!-- Header -->
+<header class="bg-slate-900 border-b border-slate-800 px-8 py-4 flex justify-between items-center">
+  <h1 class="text-2xl font-bold">Agenda<span class="text-green-500">Barber</span></h1>
+  <div class="flex gap-4 items-center">
+    <span id="userName" class="text-gray-300"></span>
+    <button id="btnLogout" class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded text-sm font-semibold">
+      Sair
+    </button>
+  </div>
+</header>
+
+<div class="max-w-6xl mx-auto px-6 py-8">
+  <div class="flex justify-between items-center mb-6">
+    <h2 class="text-3xl font-bold">Minha Agenda</h2>
+    <div class="flex gap-3">
+      <button id="btnVerLista" class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg text-sm font-semibold">
+        Ver Lista
+      </button>
+      <button id="btnVerCalendario" class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg text-sm font-semibold hidden">
+        Ver Calendário
+      </button>
+    </div>
+  </div>
+
+  <!-- Calendário -->
+  <div id="calendarioContainer" class="bg-slate-900 p-4 rounded-xl mb-6 border border-slate-800">
+    <div id="calendario"></div>
+  </div>
+
+  <!-- Filtros -->
+  <div class="bg-slate-900 p-4 rounded-xl mb-6 border border-slate-800">
+    <div class="flex gap-4 items-center flex-wrap">
+      <div>
+        <label class="block text-sm font-medium mb-2">Filtrar por data</label>
+        <input id="filtroData" type="date" class="p-2 bg-slate-800 rounded-lg border border-slate-700">
+      </div>
+      <div>
+        <label class="block text-sm font-medium mb-2">Filtrar por status</label>
+        <select id="filtroStatus" class="p-2 bg-slate-800 rounded-lg border border-slate-700">
+          <option value="">Todos</option>
+          <option value="pendente">Pendente</option>
+          <option value="confirmado">Confirmado</option>
+          <option value="concluido">Concluído</option>
+          <option value="cancelado">Cancelado</option>
+        </select>
+      </div>
+      <div class="flex items-end">
+        <button id="btnLimparFiltros" 
+          class="bg-gray-600 hover:bg-gray-700 px-4 py-2 rounded-lg text-sm font-semibold">
+          Limpar Filtros
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Estatísticas rápidas -->
+  <div class="grid md:grid-cols-4 gap-4 mb-6">
+    <div class="bg-slate-900 p-4 rounded-xl border border-slate-800">
+      <div class="text-2xl font-bold text-yellow-400" id="statPendentes">0</div>
+      <div class="text-sm text-gray-400">Pendentes</div>
+    </div>
+    <div class="bg-slate-900 p-4 rounded-xl border border-slate-800">
+      <div class="text-2xl font-bold text-green-400" id="statConfirmados">0</div>
+      <div class="text-sm text-gray-400">Confirmados</div>
+    </div>
+    <div class="bg-slate-900 p-4 rounded-xl border border-slate-800">
+      <div class="text-2xl font-bold text-blue-400" id="statConcluidos">0</div>
+      <div class="text-sm text-gray-400">Concluídos</div>
+    </div>
+    <div class="bg-slate-900 p-4 rounded-xl border border-slate-800">
+      <div class="text-2xl font-bold" id="statTotal">0</div>
+      <div class="text-sm text-gray-400">Total</div>
+    </div>
+  </div>
+
+  <!-- Lista de Agendamentos -->
+  <div id="listaAgendamentos" class="space-y-4">
+    <!-- Agendamentos serão inseridos aqui -->
+  </div>
+
+  <div id="mensagemVazia" class="hidden text-center py-12 text-gray-400">
+    <p class="text-lg">Nenhum agendamento encontrado.</p>
+  </div>
+</div>
+
+<script type="module">
+import { supabase } from './js/supabase.js'
+
+let todosAgendamentos = []
+let agendamentoEditando = null
+
+// Elementos
+const listaAgendamentos = document.getElementById('listaAgendamentos')
+const mensagemVazia = document.getElementById('mensagemVazia')
+const filtroData = document.getElementById('filtroData')
+const filtroStatus = document.getElementById('filtroStatus')
+const btnLimparFiltros = document.getElementById('btnLimparFiltros')
+const btnLogout = document.getElementById('btnLogout')
+const userName = document.getElementById('userName')
+const statPendentes = document.getElementById('statPendentes')
+const statConfirmados = document.getElementById('statConfirmados')
+const statConcluidos = document.getElementById('statConcluidos')
+const statTotal = document.getElementById('statTotal')
+const calendarioContainer = document.getElementById('calendarioContainer')
+const btnVerLista = document.getElementById('btnVerLista')
+const btnVerCalendario = document.getElementById('btnVerCalendario')
+const calendarioDiv = document.getElementById('calendario')
+let calendario = null
+
+// Carregar dados do usuário
+const { data: userData } = await supabase.auth.getUser()
+if (!userData.user) {
+  window.location.href = 'login.html'
+}
+
+const { data: profile } = await supabase
+  .from('profiles')
+  .select('nome')
+  .eq('id', userData.user.id)
+  .single()
+
+userName.textContent = profile?.nome || 'Barbeiro'
+
+// Carregar agendamentos
+async function carregarAgendamentos() {
+  const { data: agendamentos } = await supabase
+    .from('agendamentos')
+    .select(`
+      *,
+      barbearias(nome),
+      servicos(nome, preco, duracao),
+      cliente:profiles!agendamentos_cliente_id_fkey(nome)
+    `)
+    .eq('barbeiro_id', userData.user.id)
+    .order('data', { ascending: true })
+    .order('hora', { ascending: true })
+  
+  todosAgendamentos = agendamentos || []
+  aplicarFiltros()
+}
+
+// Aplicar filtros
+function aplicarFiltros() {
+  let agendamentosFiltrados = [...todosAgendamentos]
+  
+  if (filtroData.value) {
+    agendamentosFiltrados = agendamentosFiltrados.filter(a => a.data === filtroData.value)
+  }
+  
+  if (filtroStatus.value) {
+    agendamentosFiltrados = agendamentosFiltrados.filter(a => a.status === filtroStatus.value)
+  }
+  
+  atualizarEstatisticas(agendamentosFiltrados)
+  renderizarAgendamentos(agendamentosFiltrados)
+  if (calendario) {
+    inicializarCalendario()
+  }
+}
+
+// Atualizar estatísticas
+function atualizarEstatisticas(agendamentos) {
+  const stats = {
+    pendente: agendamentos.filter(a => a.status === 'pendente').length,
+    confirmado: agendamentos.filter(a => a.status === 'confirmado').length,
+    concluido: agendamentos.filter(a => a.status === 'concluido').length,
+    total: agendamentos.length
+  }
+  
+  statPendentes.textContent = stats.pendente
+  statConfirmados.textContent = stats.confirmado
+  statConcluidos.textContent = stats.concluido
+  statTotal.textContent = stats.total
+}
+
+// Renderizar agendamentos
+function renderizarAgendamentos(agendamentos) {
+  if (!agendamentos || agendamentos.length === 0) {
+    listaAgendamentos.classList.add('hidden')
+    mensagemVazia.classList.remove('hidden')
+    return
+  }
+  
+  listaAgendamentos.classList.remove('hidden')
+  mensagemVazia.classList.add('hidden')
+  
+  listaAgendamentos.innerHTML = ''
+  
+  agendamentos.forEach(a => {
+    const dataFormatada = new Date(a.data + 'T00:00:00').toLocaleDateString('pt-BR')
+    const servico = a.servicos || {}
+    const cliente = a.cliente || {}
+    const barbearia = a.barbearias || {}
+    
+    const statusClass = {
+      'confirmado': 'bg-green-500/20 text-green-400 border-green-500/30',
+      'cancelado': 'bg-red-500/20 text-red-400 border-red-500/30',
+      'concluido': 'bg-blue-500/20 text-blue-400 border-blue-500/30',
+      'pendente': 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30'
+    }[a.status] || 'bg-gray-500/20 text-gray-400 border-gray-500/30'
+    
+    listaAgendamentos.innerHTML += `
+      <div class="bg-slate-900 p-6 rounded-xl border ${statusClass.split(' ')[2]} hover:border-opacity-60 transition">
+        <div class="flex justify-between items-start mb-4">
+          <div>
+            <h3 class="text-xl font-bold mb-1">${cliente.nome || 'Cliente não informado'}</h3>
+            <p class="text-gray-400">${barbearia.nome || 'Barbearia'}</p>
+          </div>
+          <span class="px-3 py-1 rounded-full text-sm font-medium ${statusClass}">
+            ${a.status || 'pendente'}
+          </span>
+        </div>
+        
+        <div class="grid md:grid-cols-2 gap-4 mb-4 text-gray-300">
+          <div>
+            <span class="text-gray-500">📅 Data:</span> ${dataFormatada}
+          </div>
+          <div>
+            <span class="text-gray-500">⏰ Hora:</span> ${a.hora}
+          </div>
+          <div>
+            <span class="text-gray-500">✂️ Serviço:</span> ${servico.nome || 'Não informado'}
+          </div>
+          <div>
+            <span class="text-gray-500">💰 Valor:</span> R$ ${parseFloat(servico.preco || 0).toFixed(2)}
+          </div>
+          ${servico.duracao ? `
+          <div>
+            <span class="text-gray-500">⏱️ Duração:</span> ${servico.duracao} minutos
+          </div>
+          ` : ''}
+        </div>
+        
+        ${a.status !== 'cancelado' && a.status !== 'concluido' ? `
+        <div class="flex gap-3 flex-wrap">
+          <select id="status-${a.id}" 
+            class="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm">
+            <option value="pendente" ${a.status === 'pendente' ? 'selected' : ''}>Pendente</option>
+            <option value="confirmado" ${a.status === 'confirmado' ? 'selected' : ''}>Confirmado</option>
+            <option value="concluido" ${a.status === 'concluido' ? 'selected' : ''}>Concluído</option>
+            <option value="cancelado" ${a.status === 'cancelado' ? 'selected' : ''}>Cancelado</option>
+          </select>
+          <button onclick="atualizarStatus('${a.id}')" 
+            class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg text-sm font-semibold">
+            Atualizar Status
+          </button>
+        </div>
+        ` : a.status === 'concluido' ? `
+        <div class="text-green-400 text-sm font-medium">
+          ✓ Agendamento concluído
+        </div>
+        ` : `
+        <div class="text-red-400 text-sm font-medium">
+          ✗ Agendamento cancelado
+        </div>
+        `}
+      </div>
+    `
+  })
+}
+
+// Inicializar calendário
+function inicializarCalendario() {
+  if (calendario) {
+    calendario.destroy()
+  }
+
+  const eventos = todosAgendamentos.map(a => {
+    const dataFormatada = `${a.data}T${a.hora}`
+    const servico = a.servicos || {}
+    const cliente = a.cliente || {}
+    
+    const corStatus = {
+      'confirmado': '#22c55e',
+      'cancelado': '#ef4444',
+      'concluido': '#3b82f6',
+      'pendente': '#eab308'
+    }[a.status] || '#6b7280'
+    
+    return {
+      id: a.id,
+      title: `${cliente.nome || 'Cliente'} - ${servico.nome || 'Serviço'}`,
+      start: dataFormatada,
+      backgroundColor: corStatus,
+      borderColor: corStatus,
+      extendedProps: {
+        agendamento: a
+      }
+    }
+  })
+
+  calendario = new FullCalendar.Calendar(calendarioDiv, {
+    initialView: 'dayGridMonth',
+    locale: 'pt-br',
+    headerToolbar: {
+      left: 'prev,next today',
+      center: 'title',
+      right: 'dayGridMonth,timeGridWeek,timeGridDay'
+    },
+    events: eventos,
+    eventClick: function(info) {
+      const a = info.event.extendedProps.agendamento
+      const servico = a.servicos || {}
+      const cliente = a.cliente || {}
+      const dataFormatada = new Date(a.data + 'T00:00:00').toLocaleDateString('pt-BR')
+      
+      alert(`Cliente: ${cliente.nome || 'Não informado'}\nServiço: ${servico.nome || 'Não informado'}\nData: ${dataFormatada}\nHora: ${a.hora}\nStatus: ${a.status}`)
+    },
+    height: 'auto'
+  })
+
+  calendario.render()
+}
+
+// Alternar entre lista e calendário
+btnVerLista.addEventListener('click', () => {
+  calendarioContainer.classList.add('hidden')
+  listaAgendamentos.classList.remove('hidden')
+  btnVerLista.classList.add('hidden')
+  btnVerCalendario.classList.remove('hidden')
+})
+
+btnVerCalendario.addEventListener('click', () => {
+  calendarioContainer.classList.remove('hidden')
+  listaAgendamentos.classList.add('hidden')
+  btnVerCalendario.classList.add('hidden')
+  btnVerLista.classList.remove('hidden')
+  inicializarCalendario()
+})
+
+// Funções globais
+window.atualizarStatus = async (id) => {
+  const select = document.getElementById(`status-${id}`)
+  const novoStatus = select.value
+  
+  const { error } = await supabase
+    .from('agendamentos')
+    .update({ status: novoStatus })
+    .eq('id', id)
+  
+  if (error) {
+    alert('Erro ao atualizar status: ' + error.message)
+    return
+  }
+  
+  alert('Status atualizado com sucesso!')
+  await carregarAgendamentos()
+  if (calendario) {
+    inicializarCalendario()
+  }
+}
+
+// Event listeners
+filtroData.addEventListener('change', aplicarFiltros)
+filtroStatus.addEventListener('change', aplicarFiltros)
+
+btnLimparFiltros.addEventListener('click', () => {
+  filtroData.value = ''
+  filtroStatus.value = ''
+  aplicarFiltros()
+})
+
+btnLogout.addEventListener('click', async () => {
+  await supabase.auth.signOut()
+  window.location.href = 'login.html'
+})
+
+// Inicializar
+await carregarAgendamentos()
+inicializarCalendario()
+
+</script>
+
+</body>
+</html>

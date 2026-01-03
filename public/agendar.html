@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Agendar | AgendaBarber</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-950 text-white min-h-screen">
+
+<!-- Header -->
+<header class="bg-slate-900 border-b border-slate-800 px-8 py-4 flex justify-between items-center">
+  <h1 class="text-2xl font-bold">Agenda<span class="text-green-500">Barber</span></h1>
+  <a href="index.html" class="text-gray-400 hover:text-white text-sm">Voltar ao início</a>
+</header>
+
+<div class="max-w-2xl mx-auto px-6 py-8">
+  <div id="loading" class="text-center py-12">
+    <p class="text-gray-400">Carregando informações do barbeiro...</p>
+  </div>
+
+  <div id="conteudo" class="hidden">
+    <h2 class="text-3xl font-bold mb-2" id="nomeBarbeiro">Agendar com Barbeiro</h2>
+    <p class="text-gray-400 mb-6" id="infoBarbearia"></p>
+
+    <!-- Formulário de Agendamento -->
+    <div class="bg-slate-900 p-6 rounded-xl border border-slate-800 mb-6">
+      <h3 class="text-xl font-bold mb-4">Novo Agendamento</h3>
+      
+      <div class="space-y-4 mb-4">
+        <div>
+          <label class="block text-sm font-medium mb-2">Serviço</label>
+          <select id="selectServico" class="w-full p-3 bg-slate-800 rounded-lg border border-slate-700">
+            <option value="">Selecione um serviço</option>
+          </select>
+        </div>
+        
+        <div>
+          <label class="block text-sm font-medium mb-2">Data</label>
+          <input id="inputData" type="date" class="w-full p-3 bg-slate-800 rounded-lg border border-slate-700" min="">
+        </div>
+        
+        <div>
+          <label class="block text-sm font-medium mb-2">Hora</label>
+          <input id="inputHora" type="time" class="w-full p-3 bg-slate-800 rounded-lg border border-slate-700">
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium mb-2">Seu Nome</label>
+          <input id="inputNomeCliente" type="text" class="w-full p-3 bg-slate-800 rounded-lg border border-slate-700" placeholder="Digite seu nome">
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium mb-2">Seu Email</label>
+          <input id="inputEmailCliente" type="email" class="w-full p-3 bg-slate-800 rounded-lg border border-slate-700" placeholder="seu@email.com">
+        </div>
+      </div>
+      
+      <button id="btnAgendar" 
+        class="w-full bg-green-500 hover:bg-green-600 text-black px-6 py-3 rounded-lg font-semibold">
+        Confirmar Agendamento
+      </button>
+    </div>
+
+    <div id="mensagemErro" class="hidden bg-red-500/20 border border-red-500/50 text-red-400 p-4 rounded-lg mb-4"></div>
+    <div id="mensagemSucesso" class="hidden bg-green-500/20 border border-green-500/50 text-green-400 p-4 rounded-lg mb-4"></div>
+  </div>
+
+  <div id="erroBarbeiro" class="hidden text-center py-12">
+    <p class="text-red-400 text-lg mb-4">Barbeiro não encontrado</p>
+    <a href="index.html" class="text-green-500 hover:underline">Voltar ao início</a>
+  </div>
+</div>
+
+<script type="module">
+import { supabase } from './js/supabase.js'
+
+// Pegar ID do barbeiro da URL
+const urlParams = new URLSearchParams(window.location.search)
+const barbeiroId = urlParams.get('barbeiro') || urlParams.get('id')
+
+const loading = document.getElementById('loading')
+const conteudo = document.getElementById('conteudo')
+const erroBarbeiro = document.getElementById('erroBarbeiro')
+const nomeBarbeiro = document.getElementById('nomeBarbeiro')
+const infoBarbearia = document.getElementById('infoBarbearia')
+const selectServico = document.getElementById('selectServico')
+const inputData = document.getElementById('inputData')
+const inputHora = document.getElementById('inputHora')
+const inputNomeCliente = document.getElementById('inputNomeCliente')
+const inputEmailCliente = document.getElementById('inputEmailCliente')
+const btnAgendar = document.getElementById('btnAgendar')
+const mensagemErro = document.getElementById('mensagemErro')
+const mensagemSucesso = document.getElementById('mensagemSucesso')
+
+// Data mínima = hoje
+inputData.min = new Date().toISOString().split('T')[0]
+
+let barbeiroData = null
+let barbeariaId = null
+
+// Carregar dados do barbeiro
+async function carregarBarbeiro() {
+  if (!barbeiroId) {
+    loading.classList.add('hidden')
+    erroBarbeiro.classList.remove('hidden')
+    return
+  }
+
+  const { data: barbeiros, error } = await supabase
+    .from('profiles')
+    .select(`
+      id,
+      nome,
+      barbearia_id,
+      barbearias(nome)
+    `)
+    .eq('id', barbeiroId)
+    .eq('role', 'barbeiro')
+
+  if (error) {
+    console.error('Erro ao buscar barbeiro:', error)
+    loading.classList.add('hidden')
+    erroBarbeiro.classList.remove('hidden')
+    return
+  }
+
+  if (!barbeiros || barbeiros.length === 0) {
+    console.error('Barbeiro não encontrado com ID:', barbeiroId)
+    loading.classList.add('hidden')
+    erroBarbeiro.classList.remove('hidden')
+    return
+  }
+
+  const barbeiro = barbeiros[0]
+  
+  if (!barbeiro.barbearia_id) {
+    console.error('Barbeiro não tem barbearia associada')
+    loading.classList.add('hidden')
+    erroBarbeiro.classList.remove('hidden')
+    erroBarbeiro.innerHTML = `
+      <p class="text-red-400 text-lg mb-4">Barbeiro não está associado a uma barbearia</p>
+      <a href="index.html" class="text-green-500 hover:underline">Voltar ao início</a>
+    `
+    return
+  }
+
+  barbeiroData = barbeiro
+  barbeariaId = barbeiro.barbearia_id
+
+  nomeBarbeiro.textContent = `Agendar com ${barbeiro.nome}`
+  infoBarbearia.textContent = barbeiro.barbearias?.nome || 'Barbearia'
+
+  await carregarServicos()
+
+  loading.classList.add('hidden')
+  conteudo.classList.remove('hidden')
+}
+
+// Carregar serviços
+async function carregarServicos() {
+  if (!barbeariaId) return
+
+  const { data: servicos } = await supabase
+    .from('servicos')
+    .select('*')
+    .eq('barbearia_id', barbeariaId)
+    .order('nome')
+
+  selectServico.innerHTML = '<option value="">Selecione um serviço</option>'
+  if (servicos && servicos.length > 0) {
+    servicos.forEach(s => {
+      selectServico.innerHTML += `<option value="${s.id}">${s.nome} - R$ ${parseFloat(s.preco).toFixed(2)} (${s.duracao}min)</option>`
+    })
+  }
+}
+
+// Criar agendamento
+btnAgendar.addEventListener('click', async () => {
+  if (!selectServico.value || !inputData.value || !inputHora.value || !inputNomeCliente.value.trim() || !inputEmailCliente.value.trim()) {
+    mostrarErro('Preencha todos os campos!')
+    return
+  }
+
+  // Criar ou encontrar cliente
+  let clienteId = null
+
+  // Tentar criar usuário no auth (pode falhar se email já existe)
+  const senhaTemporaria = Math.random().toString(36).slice(-12) + 'A1!@'
+  const { data: authData, error: authError } = await supabase.auth.signUp({
+    email: inputEmailCliente.value.trim(),
+    password: senhaTemporaria
+  })
+
+  if (authData?.user) {
+    // Usuário criado com sucesso
+    clienteId = authData.user.id
+    
+    // Criar perfil
+    await supabase
+      .from('profiles')
+      .insert({
+        id: clienteId,
+        nome: inputNomeCliente.value.trim(),
+        role: 'cliente'
+      })
+  } else {
+    // Email já existe ou erro - criar perfil com UUID temporário
+    // O cliente precisará fazer login depois para acessar seus agendamentos
+    clienteId = crypto.randomUUID()
+    
+    const { error: profileError } = await supabase
+      .from('profiles')
+      .insert({
+        id: clienteId,
+        nome: inputNomeCliente.value.trim(),
+        role: 'cliente'
+      })
+
+    if (profileError && !profileError.message.includes('duplicate')) {
+      // Se falhar, tentar buscar cliente existente pelo nome (aproximado)
+      mostrarErro('Aviso: Seu agendamento foi criado, mas recomendamos que você faça login para gerenciar seus agendamentos.')
+    }
+  }
+
+  // Criar agendamento
+  const { error: agendamentoError } = await supabase
+    .from('agendamentos')
+    .insert({
+      barbearia_id: barbeariaId,
+      barbeiro_id: barbeiroId,
+      cliente_id: clienteId,
+      servico_id: selectServico.value,
+      data: inputData.value,
+      hora: inputHora.value,
+      status: 'pendente'
+    })
+
+  if (agendamentoError) {
+    mostrarErro('Erro ao criar agendamento: ' + agendamentoError.message)
+    return
+  }
+
+  mostrarSucesso('Agendamento criado com sucesso! Você receberá uma confirmação por email.')
+  
+  // Limpar formulário
+  selectServico.value = ''
+  inputData.value = ''
+  inputHora.value = ''
+  inputNomeCliente.value = ''
+  inputEmailCliente.value = ''
+})
+
+function mostrarErro(mensagem) {
+  mensagemErro.textContent = mensagem
+  mensagemErro.classList.remove('hidden')
+  mensagemSucesso.classList.add('hidden')
+  setTimeout(() => {
+    mensagemErro.classList.add('hidden')
+  }, 5000)
+}
+
+function mostrarSucesso(mensagem) {
+  mensagemSucesso.textContent = mensagem
+  mensagemSucesso.classList.remove('hidden')
+  mensagemErro.classList.add('hidden')
+  setTimeout(() => {
+    mensagemSucesso.classList.add('hidden')
+  }, 5000)
+}
+
+// Inicializar
+await carregarBarbeiro()
+
+</script>
+
+</body>
+</html>
+

@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"></head>
+<body>
+
+<script type="module">
+import { supabase } from './js/supabase.js'
+
+const { data } = await supabase.auth.getUser()
+if (!data.user) location.href = 'login.html'
+
+const { data: profile, error: profileError } = await supabase
+  .from('profiles')
+  .select('*')
+  .eq('id', data.user.id)
+  .single()
+
+if (profileError || !profile) {
+  console.error('Erro ao carregar perfil:', profileError)
+  alert('Perfil não encontrado. Por favor, crie uma conta primeiro.')
+  await supabase.auth.signOut()
+  location.href = 'register.html'
+  throw new Error('Perfil não encontrado')
+}
+
+if (profile.role === 'master') location.href = 'master.html'
+if (profile.role === 'admin') location.href = 'admin.html'
+if (profile.role === 'barbeiro') location.href = 'barber.html'
+if (profile.role === 'cliente') location.href = 'client.html'
+</script>
+
+</body>
+</html>

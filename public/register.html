@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Criar conta | AgendaBarber</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-slate-950 flex items-center justify-center min-h-screen">
+
+<div class="bg-slate-900 p-8 rounded-xl w-96">
+  <h2 class="text-2xl text-white font-bold mb-6 text-center">
+    Criar conta
+  </h2>
+
+  <input id="nome" class="w-full p-3 mb-3 rounded bg-slate-800 text-white"
+         placeholder="Seu nome">
+
+  <input id="email" class="w-full p-3 mb-3 rounded bg-slate-800 text-white"
+         placeholder="Email">
+
+  <input id="password" type="password"
+         class="w-full p-3 mb-3 rounded bg-slate-800 text-white"
+         placeholder="Senha">
+
+  <select id="role"
+          class="w-full p-3 mb-3 rounded bg-slate-800 text-white">
+    <option value="admin">Dono da Barbearia</option>
+    <option value="barbeiro">Barbeiro</option>
+    <option value="cliente">Cliente</option>
+  </select>
+
+  <div id="divNomeBarbearia" class="mb-3">
+    <input id="nomeBarbearia" class="w-full p-3 rounded bg-slate-800 text-white"
+           placeholder="Nome da sua barbearia">
+  </div>
+
+  <button id="btnRegister"
+          class="w-full bg-green-500 text-black py-3 rounded font-semibold">
+    Criar conta
+  </button>
+</div>
+
+<script type="module">
+import { register } from './js/auth.js'
+import { supabase } from './js/supabase.js'
+
+// Função para mostrar/ocultar campo de nome da barbearia
+function atualizarCampoBarbearia() {
+  const divNomeBarbearia = document.getElementById('divNomeBarbearia')
+  const nomeBarbearia = document.getElementById('nomeBarbearia')
+  
+  if (role.value === 'admin' || role.value === 'barbeiro') {
+    divNomeBarbearia.classList.remove('hidden')
+    nomeBarbearia.setAttribute('required', 'required')
+  } else {
+    divNomeBarbearia.classList.add('hidden')
+    nomeBarbearia.removeAttribute('required')
+    nomeBarbearia.value = ''
+  }
+}
+
+// Executar ao carregar e ao mudar o select
+role.addEventListener('change', atualizarCampoBarbearia)
+// Executar ao carregar a página
+atualizarCampoBarbearia()
+
+btnRegister.onclick = async () => {
+  if ((role.value === 'admin' || role.value === 'barbeiro') && !nomeBarbearia.value.trim()) {
+    alert('Digite o nome da barbearia!')
+    return
+  }
+
+  const { data } = await register(email.value, password.value)
+
+  let barbeariaId = null
+
+  // Se for admin ou barbeiro, criar barbearia
+  if (role.value === 'admin' || role.value === 'barbeiro') {
+    const { data: novaBarbearia, error: barbeariaError } = await supabase
+      .from('barbearias')
+      .insert({
+        nome: nomeBarbearia.value.trim(),
+        ativo: true
+      })
+      .select()
+      .single()
+
+    if (barbeariaError) {
+      alert('Erro ao criar barbearia: ' + barbeariaError.message)
+      return
+    }
+
+    barbeariaId = novaBarbearia.id
+  }
+
+  // Criar perfil
+  const perfilData = {
+    id: data.user.id,
+    nome: nome.value,
+    role: role.value
+  }
+
+  if (barbeariaId) {
+    perfilData.barbearia_id = barbeariaId
+  }
+
+  const { error: profileError } = await supabase.from('profiles').insert(perfilData)
+
+  if (profileError) {
+    alert('Erro ao criar perfil: ' + profileError.message)
+    console.error('Erro ao criar perfil:', profileError)
+    return
+  }
+
+  alert('Conta criada com sucesso!')
+  location.href = 'login.html'
+}
+</script>
+
+</body>
+</html>

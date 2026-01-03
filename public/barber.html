@@ -142,17 +142,43 @@ userName.textContent = profile?.nome || 'Barbeiro'
 
 // Carregar agendamentos
 async function carregarAgendamentos() {
-  const { data: agendamentos } = await supabase
+  console.log('Carregando agendamentos para barbeiro:', userData.user.id)
+  
+  const { data: agendamentos, error } = await supabase
     .from('agendamentos')
-    .select(`
-      *,
-      barbearias(nome),
-      servicos(nome, preco, duracao),
-      cliente:profiles!agendamentos_cliente_id_fkey(nome)
-    `)
+    .select('*')
     .eq('barbeiro_id', userData.user.id)
     .order('data', { ascending: true })
     .order('hora', { ascending: true })
+  
+  console.log('Agendamentos carregados:', { agendamentos, error })
+  
+  if (error) {
+    console.error('Erro ao carregar agendamentos:', error)
+    alert('Erro ao carregar agendamentos: ' + error.message)
+    return
+  }
+  
+  // Enriquecer dados com informações de clientes e serviços
+  if (agendamentos && agendamentos.length > 0) {
+    for (let a of agendamentos) {
+      // Carregar dados do cliente
+      const { data: cliente } = await supabase
+        .from('profiles')
+        .select('nome')
+        .eq('id', a.cliente_id)
+        .single()
+      a.cliente = cliente || {}
+      
+      // Carregar dados do serviço
+      const { data: servico } = await supabase
+        .from('servicos')
+        .select('nome, preco, duracao')
+        .eq('id', a.servico_id)
+        .single()
+      a.servicos = servico || {}
+    }
+  }
   
   todosAgendamentos = agendamentos || []
   aplicarFiltros()
@@ -209,7 +235,6 @@ function renderizarAgendamentos(agendamentos) {
     const dataFormatada = new Date(a.data + 'T00:00:00').toLocaleDateString('pt-BR')
     const servico = a.servicos || {}
     const cliente = a.cliente || {}
-    const barbearia = a.barbearias || {}
     
     const statusClass = {
       'confirmado': 'bg-green-500/20 text-green-400 border-green-500/30',
@@ -223,7 +248,7 @@ function renderizarAgendamentos(agendamentos) {
         <div class="flex justify-between items-start mb-4">
           <div>
             <h3 class="text-xl font-bold mb-1">${cliente.nome || 'Cliente não informado'}</h3>
-            <p class="text-gray-400">${barbearia.nome || 'Barbearia'}</p>
+            <p class="text-gray-400">Agendamento #${a.id.slice(0, 8)}</p>
           </div>
           <span class="px-3 py-1 rounded-full text-sm font-medium ${statusClass}">
             ${a.status || 'pendente'}

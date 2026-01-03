@@ -117,24 +117,45 @@ inputData.min = new Date().toISOString().split('T')[0]
 // Carregar dados do usuário
 const { data: userData } = await supabase.auth.getUser()
 if (!userData.user) {
-  window.location.href = 'login.html'
+  console.error('Usuário não autenticado')
+  //window.location.href = 'login.html'
 }
 
-const { data: profile } = await supabase
+console.log('Cliente logado:', userData.user.id)
+
+const { data: profile, error: profileError } = await supabase
   .from('profiles')
-  .select('nome')
+  .select('nome, role, barbearia_id')
   .eq('id', userData.user.id)
   .single()
 
+console.log('Profile carregado:', { profile, profileError })
+
+if (profileError || !profile) {
+  console.error('Erro ao carregar perfil:', profileError)
+  alert('Erro ao carregar perfil: ' + (profileError?.message || 'Perfil não encontrado'))
+  window.location.href = 'login.html'
+}
+
+if (profile?.role !== 'cliente') {
+  console.warn('Usuário não é cliente, role:', profile?.role)
+  // Permitir que outros roles acessem também, apenas avise no console
+}
+
 userName.textContent = profile?.nome || 'Cliente'
+
+console.log('Iniciando carregamento de barbearias e agendamentos...')
 
 // Carregar barbearias
 async function carregarBarbearias() {
-  const { data } = await supabase
+  console.log('Carregando barbearias...')
+  const { data, error } = await supabase
     .from('barbearias')
     .select('*')
-    .eq('ativo', true)
+    //.eq('ativo', true)
     .order('nome')
+  
+  console.log('Barbearias carregadas:', { data, error })
   
   barbearias = data || []
   selectBarbearia.innerHTML = '<option value="">Selecione uma barbearia</option>'
@@ -249,45 +270,59 @@ async function carregarAgendamentos() {
 }
 
 // Event listeners
-btnNovoAgendamento.addEventListener('click', () => {
+btnNovoAgendamento.addEventListener('click', async () => {
   agendamentoEditando = null
   formTitle.textContent = 'Novo Agendamento'
+  formAgendamento.classList.remove('hidden')
+  
   selectBarbearia.value = ''
   selectBarbeiro.value = ''
   selectServico.value = ''
   inputData.value = ''
   inputHora.value = ''
+  
+  await carregarBarbearias()
   selectBarbeiro.disabled = true
   selectServico.disabled = true
-  formAgendamento.classList.remove('hidden')
+  
+  window.scrollTo({ top: 0, behavior: 'smooth' })
 })
 
 btnCancelarForm.addEventListener('click', () => {
-  agendamentoEditando = null
   formAgendamento.classList.add('hidden')
+  agendamentoEditando = null
 })
 
-selectBarbearia.addEventListener('change', (e) => {
-  carregarBarbeiros(e.target.value)
+selectBarbearia.addEventListener('change', async (e) => {
+  await carregarBarbeiros(e.target.value)
+  await carregarServicos(e.target.value)
 })
 
 // Editar agendamento
 window.editarAgendamento = async (id) => {
-  const { data: age } = await supabase
+  const { data: agendamento } = await supabase
     .from('agendamentos')
     .select('*')
     .eq('id', id)
     .single()
   
+  if (!agendamento) return
+  
   agendamentoEditando = id
   formTitle.textContent = 'Editar Agendamento'
-  selectBarbearia.value = age.barbearia_id
-  await carregarBarbeiros(age.barbearia_id)
-  selectBarbeiro.value = age.barbeiro_id
-  selectServico.value = age.servico_id
-  inputData.value = age.data
-  inputHora.value = age.hora
   formAgendamento.classList.remove('hidden')
+  
+  await carregarBarbearias()
+  selectBarbearia.value = agendamento.barbearia_id
+  await carregarBarbeiros(agendamento.barbearia_id)
+  await carregarServicos(agendamento.barbearia_id)
+  
+  selectBarbeiro.value = agendamento.barbeiro_id
+  selectServico.value = agendamento.servico_id
+  inputData.value = agendamento.data
+  inputHora.value = agendamento.hora
+  
+  window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
 // Cancelar agendamento
@@ -300,18 +335,18 @@ window.cancelarAgendamento = async (id) => {
     .eq('id', id)
   
   if (error) {
-    alert('Erro ao cancelar: ' + error.message)
+    alert('Erro ao cancelar agendamento: ' + error.message)
     return
   }
   
   alert('Agendamento cancelado com sucesso!')
-  carregarAgendamentos()
+  await carregarAgendamentos()
 }
 
 // Salvar agendamento
 btnSalvarAgendamento.addEventListener('click', async () => {
   if (!selectBarbearia.value || !selectBarbeiro.value || !selectServico.value || !inputData.value || !inputHora.value) {
-    alert('Preencha todos os campos')
+    alert('Preencha todos os campos!')
     return
   }
 
@@ -348,7 +383,7 @@ btnSalvarAgendamento.addEventListener('click', async () => {
   alert(agendamentoEditando ? 'Agendamento atualizado com sucesso!' : 'Agendamento criado com sucesso!')
   formAgendamento.classList.add('hidden')
   agendamentoEditando = null
-  carregarAgendamentos()
+  await carregarAgendamentos()
 })
 
 btnLogout.addEventListener('click', async () => {
@@ -357,255 +392,10 @@ btnLogout.addEventListener('click', async () => {
 })
 
 // Inicializar
-carregarBarbearias()
-carregarAgendamentos()
-
-</script>
-
-</body>
-</html>
-    return
-  }
-  
-  const { data } = await supabase
-    .from('profiles')
-    .select('id, nome')
-    .eq('barbearia_id', barbeariaId)
-    .eq('role', 'barbeiro')
-    .order('nome')
-  
-  barbeiros = data || []
-  selectBarbeiro.innerHTML = '<option value="">Selecione um barbeiro</option>'
-  barbeiros.forEach(b => {
-    selectBarbeiro.innerHTML += `<option value="${b.id}">${b.nome}</option>`
-  })
-}
-
-// Carregar serviços da barbearia selecionada
-async function carregarServicos(barbeariaId) {
-  selectServico.disabled = !barbeariaId
-  if (!barbeariaId) {
-    selectServico.innerHTML = '<option value="">Selecione um serviço</option>'
-    return
-  }
-  
-  const { data } = await supabase
-    .from('servicos')
-    .select('*')
-    .eq('barbearia_id', barbeariaId)
-    .order('nome')
-  
-  servicos = data || []
-  selectServico.innerHTML = '<option value="">Selecione um serviço</option>'
-  servicos.forEach(s => {
-    selectServico.innerHTML += `<option value="${s.id}">${s.nome} - R$ ${parseFloat(s.preco).toFixed(2)} (${s.duracao}min)</option>`
-  })
-}
-
-// Carregar agendamentos do cliente
-async function carregarAgendamentos() {
-  const { data: agendamentos } = await supabase
-    .from('agendamentos')
-    .select(`
-      *,
-      barbearias(nome),
-      servicos(nome, preco, duracao),
-      barbeiro:profiles!agendamentos_barbeiro_id_fkey(nome)
-    `)
-    .eq('cliente_id', userData.user.id)
-    .order('data', { ascending: true })
-    .order('hora', { ascending: true })
-  
-  if (!agendamentos || agendamentos.length === 0) {
-    listaAgendamentos.classList.add('hidden')
-    mensagemVazia.classList.remove('hidden')
-    return
-  }
-  
-  listaAgendamentos.classList.remove('hidden')
-  mensagemVazia.classList.add('hidden')
-  
-  listaAgendamentos.innerHTML = ''
-  
-  agendamentos.forEach(a => {
-    const dataFormatada = new Date(a.data + 'T00:00:00').toLocaleDateString('pt-BR')
-    const servico = a.servicos || {}
-    const barbeiro = a.barbeiro || {}
-    const barbearia = a.barbearias || {}
-    
-    const statusClass = {
-      'confirmado': 'bg-green-500/20 text-green-400',
-      'cancelado': 'bg-red-500/20 text-red-400',
-      'concluido': 'bg-blue-500/20 text-blue-400',
-      'pendente': 'bg-yellow-500/20 text-yellow-400'
-    }[a.status] || 'bg-gray-500/20 text-gray-400'
-    
-    listaAgendamentos.innerHTML += `
-      <div class="bg-slate-900 p-6 rounded-xl border border-slate-800 hover:border-slate-700 transition">
-        <div class="flex justify-between items-start mb-4">
-          <div>
-            <h3 class="text-xl font-bold mb-1">${servico.nome || 'Serviço não informado'}</h3>
-            <p class="text-gray-400">${barbearia.nome || 'Barbearia'}</p>
-          </div>
-          <span class="px-3 py-1 rounded-full text-sm font-medium ${statusClass}">
-            ${a.status || 'pendente'}
-          </span>
-        </div>
-        
-        <div class="grid md:grid-cols-2 gap-4 mb-4 text-gray-300">
-          <div>
-            <span class="text-gray-500">📅 Data:</span> ${dataFormatada}
-          </div>
-          <div>
-            <span class="text-gray-500">⏰ Hora:</span> ${a.hora}
-          </div>
-          <div>
-            <span class="text-gray-500">💇 Barbeiro:</span> ${barbeiro.nome || 'Não informado'}
-          </div>
-          <div>
-            <span class="text-gray-500">💰 Valor:</span> R$ ${parseFloat(servico.preco || 0).toFixed(2)}
-          </div>
-        </div>
-        
-        ${a.status !== 'cancelado' && a.status !== 'concluido' ? `
-        <div class="flex gap-3">
-          <button onclick="editarAgendamento('${a.id}')" 
-            class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg text-sm font-semibold">
-            Editar
-          </button>
-          <button onclick="cancelarAgendamento('${a.id}')" 
-            class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg text-sm font-semibold">
-            Cancelar
-          </button>
-        </div>
-        ` : ''}
-      </div>
-    `
-  })
-}
-
-// Funções globais para os botões
-window.editarAgendamento = async (id) => {
-  const { data: agendamento } = await supabase
-    .from('agendamentos')
-    .select('*')
-    .eq('id', id)
-    .single()
-  
-  if (!agendamento) return
-  
-  agendamentoEditando = id
-  formTitle.textContent = 'Editar Agendamento'
-  formAgendamento.classList.remove('hidden')
-  
-  await carregarBarbearias()
-  selectBarbearia.value = agendamento.barbearia_id
-  await carregarBarbeiros(agendamento.barbearia_id)
-  await carregarServicos(agendamento.barbearia_id)
-  
-  selectBarbeiro.value = agendamento.barbeiro_id
-  selectServico.value = agendamento.servico_id
-  inputData.value = agendamento.data
-  inputHora.value = agendamento.hora
-  
-  window.scrollTo({ top: 0, behavior: 'smooth' })
-}
-
-window.cancelarAgendamento = async (id) => {
-  if (!confirm('Tem certeza que deseja cancelar este agendamento?')) return
-  
-  const { error } = await supabase
-    .from('agendamentos')
-    .update({ status: 'cancelado' })
-    .eq('id', id)
-  
-  if (error) {
-    alert('Erro ao cancelar agendamento: ' + error.message)
-    return
-  }
-  
-  alert('Agendamento cancelado com sucesso!')
-  carregarAgendamentos()
-}
-
-// Event listeners
-selectBarbearia.addEventListener('change', async (e) => {
-  await carregarBarbeiros(e.target.value)
-  await carregarServicos(e.target.value)
-})
-
-btnNovoAgendamento.addEventListener('click', async () => {
-  agendamentoEditando = null
-  formTitle.textContent = 'Novo Agendamento'
-  formAgendamento.classList.remove('hidden')
-  
-  selectBarbearia.value = ''
-  selectBarbeiro.value = ''
-  selectServico.value = ''
-  inputData.value = ''
-  inputHora.value = ''
-  
-  await carregarBarbearias()
-  selectBarbeiro.disabled = true
-  selectServico.disabled = true
-  
-  window.scrollTo({ top: 0, behavior: 'smooth' })
-})
-
-btnCancelarForm.addEventListener('click', () => {
-  formAgendamento.classList.add('hidden')
-  agendamentoEditando = null
-})
-
-btnSalvarAgendamento.addEventListener('click', async () => {
-  if (!selectBarbearia.value || !selectBarbeiro.value || !selectServico.value || !inputData.value || !inputHora.value) {
-    alert('Preencha todos os campos!')
-    return
-  }
-  
-  const dados = {
-    barbearia_id: selectBarbearia.value,
-    barbeiro_id: selectBarbeiro.value,
-    servico_id: selectServico.value,
-    data: inputData.value,
-    hora: inputHora.value,
-    status: 'pendente'
-  }
-  
-  let error
-  
-  if (agendamentoEditando) {
-    const { error: updateError } = await supabase
-      .from('agendamentos')
-      .update(dados)
-      .eq('id', agendamentoEditando)
-    error = updateError
-  } else {
-    dados.cliente_id = userData.user.id
-    const { error: insertError } = await supabase
-      .from('agendamentos')
-      .insert(dados)
-    error = insertError
-  }
-  
-  if (error) {
-    alert('Erro ao salvar agendamento: ' + error.message)
-    return
-  }
-  
-  alert(agendamentoEditando ? 'Agendamento atualizado com sucesso!' : 'Agendamento criado com sucesso!')
-  formAgendamento.classList.add('hidden')
-  agendamentoEditando = null
-  carregarAgendamentos()
-})
-
-btnLogout.addEventListener('click', async () => {
-  await supabase.auth.signOut()
-  window.location.href = 'login.html'
-})
-
-// Inicializar
+console.log('Chamando carregarBarbearias e carregarAgendamentos...')
+await carregarBarbearias()
 await carregarAgendamentos()
+console.log('Inicialização completa')
 
 </script>
 

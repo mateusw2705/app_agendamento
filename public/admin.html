@@ -15,15 +15,22 @@
   <div class="flex gap-4 items-center">
     <span id="userName" class="text-gray-300"></span>
     <span id="barbeariaName" class="text-gray-400 text-sm"></span>
-    <div id="barbeariaLinkAdmin" class="ml-4 text-sm"></div>
     <button id="btnLogout" class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded text-sm font-semibold">Sair</button>
   </div>
 </header>
 
 <!-- CONTEÚDO -->
-<div class="max-w-7xl mx-auto px-6 py-8">
+<main class="max-w-6xl mx-auto px-6 py-8 space-y-6">
+  <div class="flex flex-wrap items-center justify-between gap-4">
+    <div>
+      <h2 class="text-3xl font-bold">Dashboard da Barbearia</h2>
+      <p class="text-sm text-gray-400">Gerencie agendamentos, barbeiros e serviços com o mesmo layout suave do cliente.</p>
+    </div>
+    <div class="flex items-center gap-3">
+      <div id="barbeariaLinkAdmin" class="text-sm"></div>
+    </div>
+  </div>
   <div id="dashboardPrincipal">
-    <h2 class="text-3xl font-bold mb-6">Dashboard da Barbearia</h2>
     <!-- ESTATÍSTICAS -->
     <div class="grid md:grid-cols-4 gap-4 mb-6">
       <div class="bg-slate-900 p-6 rounded-xl border border-slate-800">
@@ -115,7 +122,7 @@
       <div id="listaBarbeiros"></div>
     </div>
   </div>
-</div>
+</main>
 <script type="module">
 import { supabase } from './js/supabase.js'
 import { getCurrentUser, register } from './js/auth.js'

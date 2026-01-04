@@ -114,6 +114,7 @@
         <h3 class="text-xl mb-4">Novo Barbeiro</h3>
         <input id="barbeiroNome" type="text" placeholder="Nome do barbeiro" class="w-full p-2 mb-2 rounded bg-slate-800">
         <input id="barbeiroEmail" type="email" placeholder="Email do barbeiro" class="w-full p-2 mb-2 rounded bg-slate-800">
+        <input id="barbeiroTelefone" type="tel" placeholder="Telefone com DDD" class="w-full p-2 mb-2 rounded bg-slate-800">
         <label id="barbeiroSenhaLabel" class="block text-sm mb-1">Senha provisória</label>
         <input id="barbeiroSenha" type="password" placeholder="Senha provisória" class="w-full p-2 mb-2 rounded bg-slate-800">
         <button id="salvarBarbeiro" class="bg-green-500 px-4 py-2 rounded font-medium text-black">Salvar</button>
@@ -269,6 +270,7 @@ window.copiarLinkAdmin = async (text) => {
 async function salvarBarbeiro() {
   const nome = document.getElementById('barbeiroNome').value.trim()
   const email = document.getElementById('barbeiroEmail').value.trim()
+  const telefone = document.getElementById('barbeiroTelefone').value.trim()
   const senha = document.getElementById('barbeiroSenha').value
 
   if (!nome || !email) {
@@ -308,7 +310,8 @@ async function salvarBarbeiro() {
       const { error } = await register(email, senha, {
         nome,
         role: 'barbeiro',
-        barbearia_id: barbearia.id
+        barbearia_id: barbearia.id,
+        telefone: telefone || null
       })
 
       if (error) {
@@ -325,6 +328,7 @@ async function salvarBarbeiro() {
     document.getElementById('formNovoBarbeiro').classList.add('hidden')
     document.getElementById('barbeiroNome').value = ''
     document.getElementById('barbeiroEmail').value = ''
+    document.getElementById('barbeiroTelefone').value = ''
     document.getElementById('barbeiroSenha').value = ''
     barbeiroEditando = null
     await carregarBarbeiros()
@@ -347,6 +351,7 @@ window.editarBarbeiro = async (id) => {
   document.getElementById('barbeiroEmail').disabled = true
   document.getElementById('barbeiroSenha').style.display = 'none'
   document.getElementById('barbeiroSenhaLabel').style.display = 'none'
+  document.getElementById('barbeiroTelefone').value = ''
   document.getElementById('formNovoBarbeiro').classList.remove('hidden')
 }
 
@@ -671,6 +676,7 @@ document.getElementById('btnNovoBarbeiro').onclick = () => {
   barbeiroEditando = null
   document.getElementById('barbeiroNome').value = ''
   document.getElementById('barbeiroEmail').value = ''
+  document.getElementById('barbeiroTelefone').value = ''
   document.getElementById('barbeiroSenha').value = ''
   document.getElementById('barbeiroEmail').disabled = false
   document.getElementById('barbeiroSenha').style.display = 'block'
@@ -680,6 +686,7 @@ document.getElementById('btnNovoBarbeiro').onclick = () => {
 
 document.getElementById('cancelarBarbeiro').onclick = () => {
   document.getElementById('formNovoBarbeiro').classList.add('hidden')
+  document.getElementById('barbeiroTelefone').value = ''
   barbeiroEditando = null
 }
 

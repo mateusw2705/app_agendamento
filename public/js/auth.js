@@ -1,30 +1,31 @@
-import { supabase } from './supabase.js'
+﻿import { supabase } from './supabase.js'
 
 export async function login(email, password) {
   return await supabase.auth.signInWithPassword({ email, password })
 }
 
 export async function register(email, password, userData = {}) {
-  // Supabase criará automaticamente o profile via trigger com os dados passados
-  const result = await supabase.auth.signUp({ 
-    email, 
+  // Supabase cria automaticamente o profile via trigger com os dados passados
+  const metadata = {
+    nome: userData.nome || '',
+    role: userData.role || 'cliente',
+    barbearia_id: userData.barbearia_id || null,
+    nome_barbearia: userData.nome_barbearia || null,
+    telefone: userData.telefone || null
+  }
+
+  const result = await supabase.auth.signUp({
+    email,
     password,
     options: {
-      data: {
-        nome: userData.nome || '',
-        role: userData.role || 'cliente',
-        barbearia_id: userData.barbearia_id || null,
-        nome_barbearia: userData.nome_barbearia || null
-      }
+      data: metadata
     }
   })
   
-  // Se deu erro na criação, retorna o erro
   if (result.error) {
     return result
   }
   
-  // Aguarda um pouco para garantir que o trigger executou
   await new Promise(resolve => setTimeout(resolve, 500))
   
   return result

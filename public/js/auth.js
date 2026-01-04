@@ -13,7 +13,8 @@ export async function register(email, password, userData = {}) {
       data: {
         nome: userData.nome || '',
         role: userData.role || 'cliente',
-        barbearia_id: userData.barbearia_id || null
+        barbearia_id: userData.barbearia_id || null,
+        nome_barbearia: userData.nome_barbearia || null
       }
     }
   })

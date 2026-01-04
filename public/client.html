@@ -4,6 +4,16 @@
   <meta charset="UTF-8">
   <title>Cliente | AgendaBarber</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
+  <style>
+    .fc { color: white; }
+    .fc-theme-standard td, .fc-theme-standard th { border-color: rgb(51 65 85); }
+    .fc-theme-standard .fc-scrollgrid { border-color: rgb(51 65 85); }
+    .fc-button-primary { background-color: rgb(34 197 94) !important; border-color: rgb(34 197 94) !important; color: black !important; }
+    .fc-button-primary:hover { background-color: rgb(22 163 74) !important; }
+    .fc-daygrid-day-number { color: white; }
+    .fc-col-header-cell-cushion { color: white; }
+  </style>
 </head>
 <body class="bg-slate-950 text-white min-h-screen">
 
@@ -22,11 +32,18 @@
   <h2 class="text-3xl font-bold mb-6">Meus Agendamentos</h2>
 
   <!-- Botão para novo agendamento -->
-  <button id="btnNovoAgendamento" 
+  <div class="flex items-center gap-3 mb-6">
+    <button id="btnVerCalendario" class="bg-green-600 hover:bg-green-700 text-black px-4 py-2 rounded-lg font-semibold">
+      Ver Calendário
+    </button>
+    <button id="btnVerLista" class="bg-blue-600 hover:bg-blue-700 text-black px-4 py-2 rounded-lg font-semibold hidden">
+      Ver Lista
+    </button>
+    <button id="btnNovoAgendamento" 
     class="mb-6 bg-green-500 hover:bg-green-600 text-black px-6 py-3 rounded-lg font-semibold">
     + Novo Agendamento
   </button>
-
+  </div>
   <!-- Formulário de Agendamento (oculto inicialmente) -->
   <div id="formAgendamento" class="hidden bg-slate-900 p-6 rounded-xl mb-6 border border-slate-800">
     <h3 class="text-xl font-bold mb-4" id="formTitle">Novo Agendamento</h3>
@@ -37,6 +54,7 @@
         <select id="selectBarbearia" class="w-full p-3 bg-slate-800 rounded-lg border border-slate-700">
           <option value="">Selecione uma barbearia</option>
         </select>
+        <div id="selectedBarbeariaDisplay" class="hidden mt-2 p-3 bg-slate-800 rounded-lg border border-slate-700 text-gray-200"></div>
       </div>
       
       <div>
@@ -77,6 +95,10 @@
   </div>
 
   <!-- Lista de Agendamentos -->
+  <div id="calendarioContainer" class="bg-slate-900 p-4 rounded-xl mb-6 border border-slate-800 hidden">
+    <div id="calendarioCliente"></div>
+  </div>
+
   <div id="listaAgendamentos" class="space-y-4">
     <!-- Agendamentos serão inseridos aqui -->
   </div>
@@ -110,6 +132,14 @@ const inputData = document.getElementById('inputData')
 const inputHora = document.getElementById('inputHora')
 const formTitle = document.getElementById('formTitle')
 const userName = document.getElementById('userName')
+const selectedBarbeariaDisplay = document.getElementById('selectedBarbeariaDisplay')
+const urlParams = new URLSearchParams(window.location.search)
+const preBarbeariaId = urlParams.get('barbearia_id')
+const btnVerCalendario = document.getElementById('btnVerCalendario')
+const btnVerLista = document.getElementById('btnVerLista')
+const calendarioContainer = document.getElementById('calendarioContainer')
+const calendarioClienteDiv = document.getElementById('calendarioCliente')
+let calendario = null
 
 // Data mínima = hoje
 inputData.min = new Date().toISOString().split('T')[0]
@@ -208,13 +238,20 @@ async function carregarServicos(barbeariaId) {
 
 // Carregar agendamentos do cliente
 async function carregarAgendamentos() {
-  const { data: agendamentos } = await supabase
+  const { data: agendamentos, error } = await supabase
     .from('agendamentos')
-    .select('*, barbearias(nome), barbeiros:profiles!barbeiro_id(nome), servicos(nome, preco)')
+    .select('*')
     .eq('cliente_id', userData.user.id)
     .gte('data', new Date().toISOString().split('T')[0])
     .order('data', { ascending: true })
     .order('hora', { ascending: true })
+
+  if (error) {
+    console.error('Erro ao buscar agendamentos:', error)
+    listaAgendamentos.innerHTML = ''
+    mensagemVazia.classList.remove('hidden')
+    return
+  }
 
   if (!agendamentos || agendamentos.length === 0) {
     listaAgendamentos.innerHTML = ''
@@ -223,51 +260,103 @@ async function carregarAgendamentos() {
   }
 
   mensagemVazia.classList.add('hidden')
-  
+
+  // Enriquecer cada agendamento com dados do serviço, barbeiro e barbearia
+  for (const a of agendamentos) {
+    const { data: serv } = await supabase.from('servicos').select('nome, preco, duracao').eq('id', a.servico_id).single()
+    a.servicos = serv || {}
+
+    const { data: bar } = await supabase.from('barbearias').select('nome').eq('id', a.barbearia_id).single()
+    a.barbearias = bar || {}
+
+    const { data: br } = await supabase.from('profiles').select('nome').eq('id', a.barbeiro_id).single()
+    a.barbeiro = br || {}
+  }
+
   let html = ''
   for (const age of agendamentos) {
-    const statusCores = {
-      pendente: 'yellow',
-      confirmado: 'green',
-      concluido: 'blue',
-      cancelado: 'red'
-    }
+    const statusCores = { pendente: 'yellow', confirmado: 'green', concluido: 'blue', cancelado: 'red' }
     const corStatus = statusCores[age.status] || 'gray'
     const dataFormatada = new Date(age.data).toLocaleDateString('pt-BR')
-    
+
     html += `
       <div class="bg-slate-900 p-4 rounded-xl border border-slate-700 hover:border-green-500 transition">
         <div class="flex justify-between items-start mb-3">
           <div class="flex-1">
-            <div class="text-gray-400 text-sm">${age.barbearias?.nome}</div>
-            <div class="font-bold text-lg mb-2">${age.servicos?.nome}</div>
+            <div class="text-gray-400 text-sm">${age.barbearias?.nome || ''}</div>
+            <div class="font-bold text-lg mb-2">${age.servicos?.nome || 'Serviço'}</div>
             <div class="text-sm text-gray-400">
               <span>📅 ${dataFormatada}</span>
               <span class="ml-4">🕐 ${age.hora}</span>
             </div>
           </div>
           <div class="text-right">
-            <div class="text-2xl font-bold text-green-400">R$ ${age.servicos?.preco}</div>
+            <div class="text-2xl font-bold text-green-400">R$ ${parseFloat(age.servicos?.preco || 0).toFixed(2)}</div>
             <span class="text-xs bg-${corStatus}-900 text-${corStatus}-200 px-2 py-1 rounded inline-block mt-2">${age.status}</span>
           </div>
         </div>
         
         ${age.status === 'pendente' || age.status === 'confirmado' ? `
           <div class="flex gap-2 border-t border-slate-700 pt-3 mt-3">
-            <button onclick="editarAgendamento('${age.id}')" class="flex-1 bg-blue-600 hover:bg-blue-700 px-3 py-2 rounded text-sm font-semibold">
-              Editar
-            </button>
-            <button onclick="cancelarAgendamento('${age.id}')" class="flex-1 bg-red-600 hover:bg-red-700 px-3 py-2 rounded text-sm font-semibold">
-              Cancelar
-            </button>
+            <button onclick="editarAgendamento('${age.id}')" class="flex-1 bg-blue-600 hover:bg-blue-700 px-3 py-2 rounded text-sm font-semibold">Editar</button>
+            <button onclick="cancelarAgendamento('${age.id}')" class="flex-1 bg-red-600 hover:bg-red-700 px-3 py-2 rounded text-sm font-semibold">Cancelar</button>
           </div>
         ` : ''}
       </div>
     `
   }
-  
+
   listaAgendamentos.innerHTML = html
+  // se o calendário estiver visível, (re)inicializa
+  if (!calendarioContainer.classList.contains('hidden')) inicializarCalendario()
 }
+
+// Inicializar calendário com os agendamentos carregados
+function inicializarCalendario() {
+  if (calendario) calendario.destroy()
+
+  const eventos = []
+  const elements = document.querySelectorAll('#listaAgendamentos > div')
+  // montar eventos a partir dos agendamentos que já foram renderizados
+  // preferimos usar 'agendamentos' disponíveis no DOM/lista para garantir compatibilidade
+  const nodes = elements
+  // Para evitar duplicação, percorremos globalmente via lista atual no HTML
+  // Se preferir, poderíamos manter uma variável global de agendamentos
+  const ags = []
+  nodes.forEach(node => {
+    try {
+      // pegar id a partir do botão Editar/Cancelar ou do atributo gerado
+      const onclick = node.querySelector('button[onclick]')
+      const match = onclick?.getAttribute('onclick')?.match(/\('(.*)'\)/)
+      const id = match ? match[1] : null
+      const title = node.querySelector('.font-bold')?.textContent?.trim() || 'Agendamento'
+      const dateText = node.querySelector('span')?.textContent || ''
+      // tenta extrair data/hora simples se disponíveis
+      // fallback: evento sem hora
+      const horaMatch = node.innerText.match(/Hora:\s*(\d{2}:\d{2})/)
+      const hora = horaMatch ? horaMatch[1] : '09:00'
+      const dataMatch = node.innerText.match(/\d{2}\/\d{2}\/\d{4}/)
+      const data = dataMatch ? dataMatch[0].split('/').reverse().join('-') : null
+      if (id && data) {
+        eventos.push({ id, title, start: `${data}T${hora}` })
+      }
+    } catch (e) {
+      // ignore
+    }
+  })
+
+  calendario = new FullCalendar.Calendar(calendarioClienteDiv, {
+    initialView: 'dayGridMonth',
+    locale: 'pt-br',
+    headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek,timeGridDay' },
+    events: eventos,
+    height: 'auto'
+  })
+
+  calendario.render()
+}
+
+
 
 // Event listeners
 btnNovoAgendamento.addEventListener('click', async () => {
@@ -275,16 +364,34 @@ btnNovoAgendamento.addEventListener('click', async () => {
   formTitle.textContent = 'Novo Agendamento'
   formAgendamento.classList.remove('hidden')
   
-  selectBarbearia.value = ''
+  // Se houver barbearia pré-selecionada via link, use ela e esconda o select
   selectBarbeiro.value = ''
   selectServico.value = ''
   inputData.value = ''
   inputHora.value = ''
-  
-  await carregarBarbearias()
-  selectBarbeiro.disabled = true
-  selectServico.disabled = true
-  
+
+  if (preBarbeariaId) {
+    // garante que as opções já foram carregadas
+    if (!Array.from(selectBarbearia.options).some(o => o.value === preBarbeariaId)) {
+      await carregarBarbearias()
+    }
+    selectBarbearia.value = preBarbeariaId
+    const bar = barbearias.find(b => b.id === preBarbeariaId)
+    if (bar) {
+      selectedBarbeariaDisplay.textContent = bar.nome
+      selectedBarbeariaDisplay.classList.remove('hidden')
+      selectBarbearia.classList.add('hidden')
+      selectBarbearia.disabled = true
+    }
+    await carregarBarbeiros(preBarbeariaId)
+    await carregarServicos(preBarbeariaId)
+  } else {
+    selectBarbearia.value = ''
+    await carregarBarbearias()
+    selectBarbeiro.disabled = true
+    selectServico.disabled = true
+  }
+
   window.scrollTo({ top: 0, behavior: 'smooth' })
 })
 
@@ -296,6 +403,23 @@ btnCancelarForm.addEventListener('click', () => {
 selectBarbearia.addEventListener('change', async (e) => {
   await carregarBarbeiros(e.target.value)
   await carregarServicos(e.target.value)
+})
+
+// Calendar / List toggles
+btnVerCalendario.addEventListener('click', () => {
+  calendarioContainer.classList.remove('hidden')
+  listaAgendamentos.classList.add('hidden')
+  btnVerCalendario.classList.add('hidden')
+  btnVerLista.classList.remove('hidden')
+  inicializarCalendario()
+})
+
+btnVerLista.addEventListener('click', () => {
+  calendarioContainer.classList.add('hidden')
+  listaAgendamentos.classList.remove('hidden')
+  btnVerLista.classList.add('hidden')
+  btnVerCalendario.classList.remove('hidden')
+  if (calendario) calendario.destroy()
 })
 
 // Editar agendamento
@@ -314,6 +438,11 @@ window.editarAgendamento = async (id) => {
   
   await carregarBarbearias()
   selectBarbearia.value = agendamento.barbearia_id
+  const barEdit = barbearias.find(b => b.id === agendamento.barbearia_id)
+  if (barEdit) {
+    selectedBarbeariaDisplay.textContent = barEdit.nome
+    selectedBarbeariaDisplay.classList.remove('hidden')
+  }
   await carregarBarbeiros(agendamento.barbearia_id)
   await carregarServicos(agendamento.barbearia_id)
   
@@ -358,6 +487,7 @@ btnSalvarAgendamento.addEventListener('click', async () => {
     hora: inputHora.value,
     status: 'pendente'
   }
+  // barbearia_nome removed: backend schema does not include this column
   
   let error
 

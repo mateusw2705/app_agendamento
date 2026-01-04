@@ -15,6 +15,7 @@
   <div class="flex gap-4 items-center">
     <span id="userName" class="text-gray-300"></span>
     <span id="barbeariaName" class="text-gray-400 text-sm"></span>
+    <div id="barbeariaLinkAdmin" class="ml-4 text-sm"></div>
     <button id="btnLogout" class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded text-sm font-semibold">Sair</button>
   </div>
 </header>
@@ -159,6 +160,17 @@ async function carregarDados() {
     document.getElementById('userName').textContent = profile.nome
     document.getElementById('barbeariaName').textContent = '(' + barbe.nome + ')'
 
+    // gerar link público para clientes (página de agendamento com barbearia pré-selecionada)
+    try {
+      const linkContainer = document.getElementById('barbeariaLinkAdmin')
+      if (linkContainer) {
+        const url = `${location.origin}/public/client.html?barbearia_id=${barbe.id}`
+        linkContainer.innerHTML = `<a href="${url}" class="text-green-400 hover:underline mr-2">Abrir cliente</a><button onclick="copiarLinkAdmin('${url}')" class="bg-slate-800 px-2 py-1 rounded text-xs">Copiar link</button>`
+      }
+    } catch (e) {
+      console.warn('Não foi possível gerar link da barbearia:', e)
+    }
+
     // Aguardar cada carregamento em sequência
     await carregarBarbeiros()
     await carregarServicos()
@@ -233,6 +245,17 @@ async function carregarBarbeiros() {
     }
   } catch (error) {
     console.error('Erro na função carregarBarbeiros:', error)
+  }
+}
+
+// Copiar link para área de transferência (Admin)
+window.copiarLinkAdmin = async (text) => {
+  try {
+    await navigator.clipboard.writeText(text)
+    alert('Link copiado!')
+  } catch (e) {
+    console.error('Erro ao copiar link:', e)
+    alert('Não foi possível copiar o link')
   }
 }
 

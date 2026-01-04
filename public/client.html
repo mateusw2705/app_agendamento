@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-br">
 <head>
   <meta charset="UTF-8">
@@ -16,518 +16,838 @@
   </style>
 </head>
 <body class="bg-slate-950 text-white min-h-screen">
-
-<!-- Header -->
-<header class="bg-slate-900 border-b border-slate-800 px-8 py-4 flex justify-between items-center">
-  <h1 class="text-2xl font-bold">Agenda<span class="text-green-500">Barber</span></h1>
-  <div class="flex gap-4 items-center">
-    <span id="userName" class="text-gray-300"></span>
-    <button id="btnLogout" class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded text-sm font-semibold">
-      Sair
-    </button>
-  </div>
-</header>
-
-<div class="max-w-6xl mx-auto px-6 py-8">
-  <h2 class="text-3xl font-bold mb-6">Meus Agendamentos</h2>
-
-  <!-- Botão para novo agendamento -->
-  <div class="flex items-center gap-3 mb-6">
-    <button id="btnVerCalendario" class="bg-green-600 hover:bg-green-700 text-black px-4 py-2 rounded-lg font-semibold">
-      Ver Calendário
-    </button>
-    <button id="btnVerLista" class="bg-blue-600 hover:bg-blue-700 text-black px-4 py-2 rounded-lg font-semibold hidden">
-      Ver Lista
-    </button>
-    <button id="btnNovoAgendamento" 
-    class="mb-6 bg-green-500 hover:bg-green-600 text-black px-6 py-3 rounded-lg font-semibold">
-    + Novo Agendamento
-  </button>
-  </div>
-  <!-- Formulário de Agendamento (oculto inicialmente) -->
-  <div id="formAgendamento" class="hidden bg-slate-900 p-6 rounded-xl mb-6 border border-slate-800">
-    <h3 class="text-xl font-bold mb-4" id="formTitle">Novo Agendamento</h3>
-    
-    <div class="grid md:grid-cols-2 gap-4 mb-4">
-      <div>
-        <label class="block text-sm font-medium mb-2">Barbearia</label>
-        <select id="selectBarbearia" class="w-full p-3 bg-slate-800 rounded-lg border border-slate-700">
-          <option value="">Selecione uma barbearia</option>
-        </select>
-        <div id="selectedBarbeariaDisplay" class="hidden mt-2 p-3 bg-slate-800 rounded-lg border border-slate-700 text-gray-200"></div>
-      </div>
-      
-      <div>
-        <label class="block text-sm font-medium mb-2">Barbeiro</label>
-        <select id="selectBarbeiro" class="w-full p-3 bg-slate-800 rounded-lg border border-slate-700" disabled>
-          <option value="">Selecione um barbeiro</option>
-        </select>
-      </div>
-      
-      <div>
-        <label class="block text-sm font-medium mb-2">Serviço</label>
-        <select id="selectServico" class="w-full p-3 bg-slate-800 rounded-lg border border-slate-700" disabled>
-          <option value="">Selecione um serviço</option>
-        </select>
-      </div>
-      
-      <div>
-        <label class="block text-sm font-medium mb-2">Data</label>
-        <input id="inputData" type="date" class="w-full p-3 bg-slate-800 rounded-lg border border-slate-700" min="">
-      </div>
-      
-      <div>
-        <label class="block text-sm font-medium mb-2">Hora</label>
-        <input id="inputHora" type="time" class="w-full p-3 bg-slate-800 rounded-lg border border-slate-700">
-      </div>
-    </div>
-    
-    <div class="flex gap-3">
-      <button id="btnSalvarAgendamento" 
-        class="bg-green-500 hover:bg-green-600 text-black px-6 py-2 rounded-lg font-semibold">
-        Salvar
-      </button>
-      <button id="btnCancelarForm" 
-        class="bg-gray-600 hover:bg-gray-700 px-6 py-2 rounded-lg font-semibold">
-        Cancelar
+  <header class="bg-slate-900 border-b border-slate-800 px-8 py-4 flex justify-between items-center">
+    <h1 class="text-2xl font-bold">Agenda<span class="text-green-500">Barber</span></h1>
+    <div class="flex gap-4 items-center">
+      <span id="userName" class="text-gray-300"></span>
+      <button id="btnLogout" class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded text-sm font-semibold">
+        Sair
       </button>
     </div>
-  </div>
+  </header>
 
-  <!-- Lista de Agendamentos -->
-  <div id="calendarioContainer" class="bg-slate-900 p-4 rounded-xl mb-6 border border-slate-800 hidden">
-    <div id="calendarioCliente"></div>
-  </div>
+  <main class="max-w-6xl mx-auto px-6 py-8 space-y-6">
+    <div class="flex flex-wrap items-center justify-between gap-4">
+      <div>
+        <h2 class="text-3xl font-bold">Minha área</h2>
+        <p class="text-sm text-gray-400">Acompanhe seus horários e marque novos cortes diretamente no app.</p>
+      </div>
+      <div class="flex rounded-xl bg-slate-900 border border-slate-800 px-1">
+        <button id="btnTabList" class="px-5 py-2 rounded-tl-lg rounded-bl-lg border-b-2 border-transparent bg-slate-800 text-white text-sm font-semibold">
+          Meus agendamentos
+        </button>
+        <button id="btnTabNew" class="px-5 py-2 rounded-tr-lg rounded-br-lg border-b-2 border-transparent bg-slate-900 text-gray-400 text-sm font-semibold hover:text-white">
+          Novo agendamento
+        </button>
+      </div>
+    </div>
 
-  <div id="listaAgendamentos" class="space-y-4">
-    <!-- Agendamentos serão inseridos aqui -->
-  </div>
+    <section id="sectionListAgendamentos" class="space-y-6">
+      <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <div class="flex flex-wrap gap-2">
+          <button id="btnRefreshBookings" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-sm font-semibold px-4 py-2 rounded-lg">
+            Atualizar
+          </button>
+          <button id="btnVerCalendario" class="bg-green-600 hover:bg-green-700 text-black text-sm font-semibold px-4 py-2 rounded-lg">
+            Ver Calendário
+          </button>
+          <button id="btnVerLista" class="bg-blue-600 hover:bg-blue-700 text-black text-sm font-semibold px-4 py-2 rounded-lg hidden">
+            Ver Lista
+          </button>
+        </div>
+        <div id="listMessage" class="hidden rounded border px-4 py-3 text-sm"></div>
+      </div>
 
-  <div id="mensagemVazia" class="hidden text-center py-12 text-gray-400">
-    <p class="text-lg">Nenhum agendamento encontrado.</p>
-    <p class="text-sm mt-2">Clique em "Novo Agendamento" para começar.</p>
-  </div>
-</div>
+      <div id="calendarioContainer" class="hidden bg-slate-900 p-4 rounded-xl border border-slate-800">
+        <div id="calendarioCliente"></div>
+      </div>
 
-<script type="module">
-import { supabase } from './js/supabase.js'
+      <div id="listaAgendamentos" class="space-y-4"></div>
 
-let agendamentoEditando = null
-let barbearias = []
-let barbeiros = []
-let servicos = []
+      <div id="mensagemVazia" class="hidden text-center py-12 text-gray-400">
+        <p class="text-lg font-semibold">Você ainda não tem agendamentos.</p>
+        <p class="text-sm mt-2">Use a aba "Novo agendamento" para marcar seu primeiro horário.</p>
+      </div>
+    </section>
 
-// Elementos
-const btnNovoAgendamento = document.getElementById('btnNovoAgendamento')
-const formAgendamento = document.getElementById('formAgendamento')
-const btnSalvarAgendamento = document.getElementById('btnSalvarAgendamento')
-const btnCancelarForm = document.getElementById('btnCancelarForm')
-const btnLogout = document.getElementById('btnLogout')
-const listaAgendamentos = document.getElementById('listaAgendamentos')
-const mensagemVazia = document.getElementById('mensagemVazia')
-const selectBarbearia = document.getElementById('selectBarbearia')
-const selectBarbeiro = document.getElementById('selectBarbeiro')
-const selectServico = document.getElementById('selectServico')
-const inputData = document.getElementById('inputData')
-const inputHora = document.getElementById('inputHora')
-const formTitle = document.getElementById('formTitle')
-const userName = document.getElementById('userName')
-const selectedBarbeariaDisplay = document.getElementById('selectedBarbeariaDisplay')
-const urlParams = new URLSearchParams(window.location.search)
-const preBarbeariaId = urlParams.get('barbearia_id')
-const btnVerCalendario = document.getElementById('btnVerCalendario')
-const btnVerLista = document.getElementById('btnVerLista')
-const calendarioContainer = document.getElementById('calendarioContainer')
-const calendarioClienteDiv = document.getElementById('calendarioCliente')
-let calendario = null
+    <section id="sectionNovoAgendamento" class="hidden space-y-6">
+      <div id="wizardMessage" class="hidden rounded border px-4 py-3 text-sm"></div>
+      <div id="formAgendamento" class="space-y-6 bg-slate-900 p-6 rounded-xl border border-slate-800">
+        <div class="flex items-center justify-between">
+          <h3 class="text-xl font-bold" id="formTitle">Novo Agendamento</h3>
+          <button id="btnCancelarForm" class="bg-gray-600 hover:bg-gray-700 px-4 py-2 rounded-lg text-sm font-semibold">
+            Cancelar
+          </button>
+        </div>
 
-// Data mínima = hoje
-inputData.min = new Date().toISOString().split('T')[0]
-
-// Carregar dados do usuário
-const { data: userData } = await supabase.auth.getUser()
-if (!userData.user) {
-  console.error('Usuário não autenticado')
-  //window.location.href = 'login.html'
-}
-
-console.log('Cliente logado:', userData.user.id)
-
-const { data: profile, error: profileError } = await supabase
-  .from('profiles')
-  .select('nome, role, barbearia_id')
-  .eq('id', userData.user.id)
-  .single()
-
-console.log('Profile carregado:', { profile, profileError })
-
-if (profileError || !profile) {
-  console.error('Erro ao carregar perfil:', profileError)
-  alert('Erro ao carregar perfil: ' + (profileError?.message || 'Perfil não encontrado'))
-  window.location.href = 'login.html'
-}
-
-if (profile?.role !== 'cliente') {
-  console.warn('Usuário não é cliente, role:', profile?.role)
-  // Permitir que outros roles acessem também, apenas avise no console
-}
-
-userName.textContent = profile?.nome || 'Cliente'
-
-console.log('Iniciando carregamento de barbearias e agendamentos...')
-
-// Carregar barbearias
-async function carregarBarbearias() {
-  console.log('Carregando barbearias...')
-  const { data, error } = await supabase
-    .from('barbearias')
-    .select('*')
-    //.eq('ativo', true)
-    .order('nome')
-  
-  console.log('Barbearias carregadas:', { data, error })
-  
-  barbearias = data || []
-  selectBarbearia.innerHTML = '<option value="">Selecione uma barbearia</option>'
-  barbearias.forEach(b => {
-    selectBarbearia.innerHTML += `<option value="${b.id}">${b.nome}</option>`
-  })
-}
-
-// Carregar barbeiros da barbearia selecionada
-async function carregarBarbeiros(barbeariaId) {
-  selectBarbeiro.disabled = !barbeariaId
-  selectServico.disabled = !barbeariaId
-  
-  if (!barbeariaId) {
-    selectBarbeiro.innerHTML = '<option value="">Selecione um barbeiro</option>'
-    selectServico.innerHTML = '<option value="">Selecione um serviço</option>'
-    return
-  }
-
-  const { data } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('barbearia_id', barbeariaId)
-    .eq('role', 'barbeiro')
-    .order('nome')
-  
-  barbeiros = data || []
-  selectBarbeiro.innerHTML = '<option value="">Selecione um barbeiro</option>'
-  barbeiros.forEach(b => {
-    selectBarbeiro.innerHTML += `<option value="${b.id}">${b.nome}</option>`
-  })
-
-  carregarServicos(barbeariaId)
-}
-
-// Carregar serviços da barbearia
-async function carregarServicos(barbeariaId) {
-  const { data } = await supabase
-    .from('servicos')
-    .select('*')
-    .eq('barbearia_id', barbeariaId)
-    .order('nome')
-  
-  servicos = data || []
-  selectServico.innerHTML = '<option value="">Selecione um serviço</option>'
-  servicos.forEach(s => {
-    selectServico.innerHTML += `<option value="${s.id}">${s.nome} (R$ ${s.preco})</option>`
-  })
-}
-
-// Carregar agendamentos do cliente
-async function carregarAgendamentos() {
-  const { data: agendamentos, error } = await supabase
-    .from('agendamentos')
-    .select('*')
-    .eq('cliente_id', userData.user.id)
-    .gte('data', new Date().toISOString().split('T')[0])
-    .order('data', { ascending: true })
-    .order('hora', { ascending: true })
-
-  if (error) {
-    console.error('Erro ao buscar agendamentos:', error)
-    listaAgendamentos.innerHTML = ''
-    mensagemVazia.classList.remove('hidden')
-    return
-  }
-
-  if (!agendamentos || agendamentos.length === 0) {
-    listaAgendamentos.innerHTML = ''
-    mensagemVazia.classList.remove('hidden')
-    return
-  }
-
-  mensagemVazia.classList.add('hidden')
-
-  // Enriquecer cada agendamento com dados do serviço, barbeiro e barbearia
-  for (const a of agendamentos) {
-    const { data: serv } = await supabase.from('servicos').select('nome, preco, duracao').eq('id', a.servico_id).single()
-    a.servicos = serv || {}
-
-    const { data: bar } = await supabase.from('barbearias').select('nome').eq('id', a.barbearia_id).single()
-    a.barbearias = bar || {}
-
-    const { data: br } = await supabase.from('profiles').select('nome').eq('id', a.barbeiro_id).single()
-    a.barbeiro = br || {}
-  }
-
-  let html = ''
-  for (const age of agendamentos) {
-    const statusCores = { pendente: 'yellow', confirmado: 'green', concluido: 'blue', cancelado: 'red' }
-    const corStatus = statusCores[age.status] || 'gray'
-    const dataFormatada = new Date(age.data).toLocaleDateString('pt-BR')
-
-    html += `
-      <div class="bg-slate-900 p-4 rounded-xl border border-slate-700 hover:border-green-500 transition">
-        <div class="flex justify-between items-start mb-3">
-          <div class="flex-1">
-            <div class="text-gray-400 text-sm">${age.barbearias?.nome || ''}</div>
-            <div class="font-bold text-lg mb-2">${age.servicos?.nome || 'Serviço'}</div>
-            <div class="text-sm text-gray-400">
-              <span>📅 ${dataFormatada}</span>
-              <span class="ml-4">🕐 ${age.hora}</span>
-            </div>
+        <div class="grid md:grid-cols-3 gap-4">
+          <div>
+            <label class="block text-sm font-medium mb-2">Barbearia</label>
+            <select id="selectBarbearia" class="w-full p-3 bg-slate-800 rounded-lg border border-slate-700">
+              <option value="">Selecione uma barbearia</option>
+            </select>
+            <div id="selectedBarbeariaDisplay" class="hidden mt-2 p-3 bg-slate-800 rounded-lg border border-slate-700 text-gray-200"></div>
           </div>
-          <div class="text-right">
-            <div class="text-2xl font-bold text-green-400">R$ ${parseFloat(age.servicos?.preco || 0).toFixed(2)}</div>
-            <span class="text-xs bg-${corStatus}-900 text-${corStatus}-200 px-2 py-1 rounded inline-block mt-2">${age.status}</span>
+          <div>
+            <label class="block text-sm font-medium mb-2">Barbeiro</label>
+            <select id="selectBarbeiro" class="w-full p-3 bg-slate-800 rounded-lg border border-slate-700" disabled>
+              <option value="">Selecione um barbeiro</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-2">Serviço</label>
+            <select id="selectServico" class="w-full p-3 bg-slate-800 rounded-lg border border-slate-700" disabled>
+              <option value="">Selecione um serviço</option>
+            </select>
           </div>
         </div>
-        
-        ${age.status === 'pendente' || age.status === 'confirmado' ? `
-          <div class="flex gap-2 border-t border-slate-700 pt-3 mt-3">
-            <button onclick="editarAgendamento('${age.id}')" class="flex-1 bg-blue-600 hover:bg-blue-700 px-3 py-2 rounded text-sm font-semibold">Editar</button>
-            <button onclick="cancelarAgendamento('${age.id}')" class="flex-1 bg-red-600 hover:bg-red-700 px-3 py-2 rounded text-sm font-semibold">Cancelar</button>
+
+        <div class="space-y-4">
+          <div data-wizard-step="1" class="rounded-lg border border-slate-700 bg-slate-900 p-4">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-sm font-semibold">Step 1 • Escolha a data</span>
+              <span class="text-xs text-gray-400">Calendário</span>
+            </div>
+            <p class="text-xs text-gray-400 mb-3">Apenas datas futuras são permitidas.</p>
+            <div class="flex flex-wrap items-center gap-3">
+              <input id="inputData" type="date" class="w-full max-w-xs p-3 bg-slate-800 rounded-lg border border-slate-700" min="">
+              <button id="wizardNextToStep2" type="button" class="bg-green-500 hover:bg-green-600 text-black px-4 py-2 rounded-lg text-sm font-semibold">
+                Próximo
+              </button>
+            </div>
           </div>
-        ` : ''}
+
+          <div data-wizard-step="2" class="hidden rounded-lg border border-slate-700 bg-slate-900 p-4">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-sm font-semibold">Step 2 • Escolha o horário</span>
+              <span class="text-xs text-gray-400">Slots disponíveis</span>
+            </div>
+            <p class="text-xs text-gray-400 mb-3">Toque ou digite o horário desejado.</p>
+            <div class="flex flex-wrap gap-2" id="timeSlotButtons"></div>
+            <div class="flex flex-wrap items-center gap-3 pt-4">
+              <input id="inputHora" type="time" class="p-3 bg-slate-800 rounded-lg border border-slate-700" />
+              <button id="wizardBackToStep1" type="button" class="flex-1 bg-slate-800 hover:bg-slate-700 border border-slate-700 px-4 py-2 rounded-lg text-sm font-semibold">
+                Voltar
+              </button>
+              <button id="wizardNextToStep3" type="button" class="flex-1 bg-green-500 hover:bg-green-600 text-black px-4 py-2 rounded-lg text-sm font-semibold">
+                Próximo
+              </button>
+            </div>
+          </div>
+
+          <div data-wizard-step="3" class="hidden rounded-lg border border-slate-700 bg-slate-900 p-4">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-sm font-semibold">Step 3 • Confirme e insira</span>
+              <span class="text-xs text-gray-400">Resumo</span>
+            </div>
+            <div class="space-y-2 text-sm text-gray-300">
+              <div>Barbearia: <span id="summaryBarbearia" class="font-semibold text-white">—</span></div>
+              <div>Serviço: <span id="summaryService" class="font-semibold text-white">—</span></div>
+              <div>Barbeiro: <span id="summaryBarber" class="font-semibold text-white">—</span></div>
+              <div>Data: <span id="summaryDate" class="font-semibold text-white">—</span></div>
+              <div>Hora: <span id="summaryTime" class="font-semibold text-white">—</span></div>
+            </div>
+            <div class="flex flex-wrap gap-3 pt-4">
+              <button id="btnSalvarAgendamento" class="flex-1 bg-green-500 hover:bg-green-600 text-black px-4 py-2 rounded-lg text-sm font-semibold">
+                Confirmar agendamento
+              </button>
+              <button id="wizardBackToStep2" type="button" class="flex-1 bg-slate-800 hover:bg-slate-700 border border-slate-700 px-4 py-2 rounded-lg text-sm font-semibold">
+                Voltar
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
-    `
-  }
+    </section>
+  </main>
 
-  listaAgendamentos.innerHTML = html
-  // se o calendário estiver visível, (re)inicializa
-  if (!calendarioContainer.classList.contains('hidden')) inicializarCalendario()
-}
+  <script type="module">
+    import { supabase } from './js/supabase.js'
 
-// Inicializar calendário com os agendamentos carregados
-function inicializarCalendario() {
-  if (calendario) calendario.destroy()
+    const bookingState = {
+      barbearia_id: null,
+      cliente_id: null,
+      barbeiro_id: null,
+      servico_id: null,
+      selectedDate: null,
+      selectedTime: null
+    }
 
-  const eventos = []
-  const elements = document.querySelectorAll('#listaAgendamentos > div')
-  // montar eventos a partir dos agendamentos que já foram renderizados
-  // preferimos usar 'agendamentos' disponíveis no DOM/lista para garantir compatibilidade
-  const nodes = elements
-  // Para evitar duplicação, percorremos globalmente via lista atual no HTML
-  // Se preferir, poderíamos manter uma variável global de agendamentos
-  const ags = []
-  nodes.forEach(node => {
-    try {
-      // pegar id a partir do botão Editar/Cancelar ou do atributo gerado
-      const onclick = node.querySelector('button[onclick]')
-      const match = onclick?.getAttribute('onclick')?.match(/\('(.*)'\)/)
-      const id = match ? match[1] : null
-      const title = node.querySelector('.font-bold')?.textContent?.trim() || 'Agendamento'
-      const dateText = node.querySelector('span')?.textContent || ''
-      // tenta extrair data/hora simples se disponíveis
-      // fallback: evento sem hora
-      const horaMatch = node.innerText.match(/Hora:\s*(\d{2}:\d{2})/)
-      const hora = horaMatch ? horaMatch[1] : '09:00'
-      const dataMatch = node.innerText.match(/\d{2}\/\d{2}\/\d{4}/)
-      const data = dataMatch ? dataMatch[0].split('/').reverse().join('-') : null
-      if (id && data) {
-        eventos.push({ id, title, start: `${data}T${hora}` })
+    let agendamentoEditando = null
+    let barbearias = []
+    let servicesCache = []
+    let barbersCache = []
+    let serviceLookup = new Map()
+    let barberLookup = new Map()
+    let barbeariaLookup = new Map()
+    let cachedBookings = []
+    let calendario = null
+    let currentWizardStep = 1
+
+    const messageToneClasses = {
+      success: ['bg-emerald-900', 'text-emerald-200', 'border-emerald-700'],
+      error: ['bg-rose-900', 'text-rose-200', 'border-rose-700'],
+      warn: ['bg-amber-900', 'text-amber-200', 'border-amber-700'],
+      info: ['bg-slate-900', 'text-slate-200', 'border-slate-700']
+    }
+    const allMessageToneClasses = [...new Set(Object.values(messageToneClasses).flat())]
+
+    const btnTabList = document.getElementById('btnTabList')
+    const btnTabNew = document.getElementById('btnTabNew')
+    const sectionListAgendamentos = document.getElementById('sectionListAgendamentos')
+    const sectionNovoAgendamento = document.getElementById('sectionNovoAgendamento')
+    const listaAgendamentos = document.getElementById('listaAgendamentos')
+    const mensagemVazia = document.getElementById('mensagemVazia')
+    const listMessage = document.getElementById('listMessage')
+    const wizardMessage = document.getElementById('wizardMessage')
+    const btnRefreshBookings = document.getElementById('btnRefreshBookings')
+    const btnVerCalendario = document.getElementById('btnVerCalendario')
+    const btnVerLista = document.getElementById('btnVerLista')
+    const calendarioContainer = document.getElementById('calendarioContainer')
+    const calendarioClienteDiv = document.getElementById('calendarioCliente')
+    const selectBarbearia = document.getElementById('selectBarbearia')
+    const selectBarbeiro = document.getElementById('selectBarbeiro')
+    const selectServico = document.getElementById('selectServico')
+    const selectedBarbeariaDisplay = document.getElementById('selectedBarbeariaDisplay')
+    const formTitle = document.getElementById('formTitle')
+    const btnSalvarAgendamento = document.getElementById('btnSalvarAgendamento')
+    const btnCancelarForm = document.getElementById('btnCancelarForm')
+    const inputData = document.getElementById('inputData')
+    const inputHora = document.getElementById('inputHora')
+    const timeSlotButtons = document.getElementById('timeSlotButtons')
+    const wizardSteps = Array.from(document.querySelectorAll('[data-wizard-step]'))
+    const wizardNextToStep2 = document.getElementById('wizardNextToStep2')
+    const wizardNextToStep3 = document.getElementById('wizardNextToStep3')
+    const wizardBackToStep1 = document.getElementById('wizardBackToStep1')
+    const wizardBackToStep2 = document.getElementById('wizardBackToStep2')
+    const summaryDateLabel = document.getElementById('summaryDate')
+    const summaryTimeLabel = document.getElementById('summaryTime')
+    const summaryServiceLabel = document.getElementById('summaryService')
+    const summaryBarberLabel = document.getElementById('summaryBarber')
+    const summaryBarbeariaLabel = document.getElementById('summaryBarbearia')
+    const userName = document.getElementById('userName')
+    const urlParams = new URLSearchParams(window.location.search)
+    const preBarbeariaId = urlParams.get('barbearia_id')
+    const btnLogout = document.getElementById('btnLogout')
+    const timeSlots = generateTimeSlots('08:00', '20:00', 30)
+    let activeTimeButton = null
+
+    inputData.min = new Date().toISOString().split('T')[0]
+
+    function generateTimeSlots(start, end, stepMinutes) {
+      const slots = []
+      let [hour, minute] = start.split(':').map(Number)
+      const [endHour, endMinute] = end.split(':').map(Number)
+      while (hour < endHour || (hour === endHour && minute <= endMinute)) {
+        slots.push(`${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`)
+        minute += stepMinutes
+        if (minute >= 60) {
+          minute -= 60
+          hour += 1
+        }
       }
-    } catch (e) {
-      // ignore
+      return slots
     }
-  })
 
-  calendario = new FullCalendar.Calendar(calendarioClienteDiv, {
-    initialView: 'dayGridMonth',
-    locale: 'pt-br',
-    headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek,timeGridDay' },
-    events: eventos,
-    height: 'auto'
-  })
-
-  calendario.render()
-}
-
-
-
-// Event listeners
-btnNovoAgendamento.addEventListener('click', async () => {
-  agendamentoEditando = null
-  formTitle.textContent = 'Novo Agendamento'
-  formAgendamento.classList.remove('hidden')
-  
-  // Se houver barbearia pré-selecionada via link, use ela e esconda o select
-  selectBarbeiro.value = ''
-  selectServico.value = ''
-  inputData.value = ''
-  inputHora.value = ''
-
-  if (preBarbeariaId) {
-    // garante que as opções já foram carregadas
-    if (!Array.from(selectBarbearia.options).some(o => o.value === preBarbeariaId)) {
-      await carregarBarbearias()
+    function showMessage(container, type, message) {
+      allMessageToneClasses.forEach(cls => container.classList.remove(cls))
+      if (!message) {
+        container.textContent = ''
+        container.classList.add('hidden')
+        return
+      }
+      const toneClasses = messageToneClasses[type] || messageToneClasses.info
+      container.classList.remove('hidden')
+      container.classList.add(...toneClasses)
+      container.textContent = message
     }
-    selectBarbearia.value = preBarbeariaId
-    const bar = barbearias.find(b => b.id === preBarbeariaId)
-    if (bar) {
-      selectedBarbeariaDisplay.textContent = bar.nome
+
+    function hideMessage(container) {
+      showMessage(container, null, null)
+    }
+
+    function renderTimeSlots() {
+      timeSlotButtons.innerHTML = ''
+      timeSlots.forEach(slot => {
+        const btn = document.createElement('button')
+        btn.type = 'button'
+        btn.dataset.timeSlot = slot
+        btn.textContent = slot
+        btn.className = 'px-3 py-2 rounded-lg border border-slate-700 text-sm bg-slate-800 hover:border-green-500'
+        timeSlotButtons.appendChild(btn)
+      })
+    }
+
+    function highlightTimeSlot(value) {
+      if (activeTimeButton) {
+        activeTimeButton.classList.remove('bg-green-500', 'text-black', 'border-green-500')
+        activeTimeButton = null
+      }
+      if (!value) return
+      const match = timeSlotButtons.querySelector(`button[data-time-slot="${value}"]`)
+      if (match) {
+        match.classList.add('bg-green-500', 'text-black', 'border-green-500')
+        activeTimeButton = match
+      }
+    }
+
+    function goToWizardStep(step) {
+      currentWizardStep = step
+      wizardSteps.forEach(stepEl => {
+        const target = Number(stepEl.dataset.wizardStep)
+        stepEl.classList.toggle('hidden', target !== step)
+      })
+    }
+
+    const currencyFormatter = new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    })
+
+    function formatCurrency(value) {
+      if (value === undefined || value === null) {
+        return currencyFormatter.format(0)
+      }
+      return currencyFormatter.format(Number(value))
+    }
+
+    function updateWizardSummary() {
+      summaryDateLabel.textContent = bookingState.selectedDate
+        ? new Date(bookingState.selectedDate).toLocaleDateString('pt-BR')
+        : '—'
+      summaryTimeLabel.textContent = bookingState.selectedTime || '—'
+      const service = serviceLookup.get(bookingState.servico_id)
+      summaryServiceLabel.textContent = service
+        ? `${service.nome} • ${service.duracao || '--'} min • ${formatCurrency(service.preco)}`
+        : '—'
+      const barber = barberLookup.get(bookingState.barbeiro_id)
+      summaryBarberLabel.textContent = barber?.nome || '—'
+      const barbearia = barbeariaLookup.get(bookingState.barbearia_id)
+      summaryBarbeariaLabel.textContent = barbearia?.nome || '—'
+    }
+
+    function toggleTabButton(button, isActive) {
+      button.classList.toggle('bg-slate-800', isActive)
+      button.classList.toggle('text-white', isActive)
+      button.classList.toggle('border-slate-500', isActive)
+      button.classList.toggle('bg-slate-900', !isActive)
+      button.classList.toggle('text-gray-400', !isActive)
+      button.classList.toggle('border-transparent', !isActive)
+    }
+
+    function setActiveTab(tab) {
+      const showList = tab === 'list'
+      sectionListAgendamentos.classList.toggle('hidden', !showList)
+      sectionNovoAgendamento.classList.toggle('hidden', showList)
+      toggleTabButton(btnTabList, showList)
+      toggleTabButton(btnTabNew, !showList)
+      if (showList) {
+        hideMessage(wizardMessage)
+      } else {
+        hideMessage(listMessage)
+      }
+    }
+
+    function resetWizard({ keepDateTime = false } = {}) {
+      if (!keepDateTime) {
+        bookingState.selectedDate = null
+        bookingState.selectedTime = null
+        inputData.value = ''
+        inputHora.value = ''
+        highlightTimeSlot(null)
+      }
+      goToWizardStep(1)
+      hideMessage(wizardMessage)
+      updateWizardSummary()
+    }
+
+    function populateBarbeiros(barbeariaId) {
+      const itens = barbersCache.filter(b => b.barbearia_id === barbeariaId)
+      selectBarbeiro.innerHTML = '<option value="">Selecione um barbeiro</option>'
+      itens.forEach(b => {
+        selectBarbeiro.innerHTML += `<option value="${b.id}">${b.nome}</option>`
+      })
+      selectBarbeiro.disabled = itens.length === 0
+      if (!itens.length) selectBarbeiro.value = ''
+    }
+
+    function populateServicos(barbeariaId) {
+      const itens = servicesCache.filter(s => s.barbearia_id === barbeariaId)
+      selectServico.innerHTML = '<option value="">Selecione um serviço</option>'
+      itens.forEach(s => {
+        const precoTexto =
+          s.preco !== null && s.preco !== undefined
+            ? ` (R$ ${Number(s.preco).toFixed(2)})`
+            : ''
+        selectServico.innerHTML += `<option value="${s.id}">${s.nome}${precoTexto}</option>`
+      })
+      selectServico.disabled = itens.length === 0
+      if (!itens.length) selectServico.value = ''
+    }
+
+    function applyPreselectedBarbearia(barbeariaId) {
+      const barbearia = barbeariaLookup.get(barbeariaId)
+      if (!barbearia) return
+      bookingState.barbearia_id = barbeariaId
+      selectedBarbeariaDisplay.textContent = barbearia.nome
       selectedBarbeariaDisplay.classList.remove('hidden')
       selectBarbearia.classList.add('hidden')
       selectBarbearia.disabled = true
+      populateBarbeiros(barbeariaId)
+      populateServicos(barbeariaId)
     }
-    await carregarBarbeiros(preBarbeariaId)
-    await carregarServicos(preBarbeariaId)
-  } else {
-    selectBarbearia.value = ''
-    await carregarBarbearias()
-    selectBarbeiro.disabled = true
-    selectServico.disabled = true
-  }
 
-  window.scrollTo({ top: 0, behavior: 'smooth' })
-})
+    function showSelectBarbearia() {
+      selectBarbearia.classList.remove('hidden')
+      selectBarbearia.disabled = false
+      selectedBarbeariaDisplay.classList.add('hidden')
+    }
 
-btnCancelarForm.addEventListener('click', () => {
-  formAgendamento.classList.add('hidden')
-  agendamentoEditando = null
-})
+    async function carregarBarbearias() {
+      const { data, error } = await supabase
+        .from('barbearias')
+        .select('*')
+        .order('nome')
+      if (error) {
+        console.error('Erro ao carregar barbearias:', error)
+        showMessage(listMessage, 'error', 'Não foi possível carregar as barbearias.')
+        return
+      }
+      barbearias = data || []
+      barbeariaLookup = new Map(barbearias.map(b => [b.id, b]))
+      selectBarbearia.innerHTML = '<option value="">Selecione uma barbearia</option>'
+      barbearias.forEach(b => {
+        selectBarbearia.innerHTML += `<option value="${b.id}">${b.nome}</option>`
+      })
+    }
 
-selectBarbearia.addEventListener('change', async (e) => {
-  await carregarBarbeiros(e.target.value)
-  await carregarServicos(e.target.value)
-})
+    async function loadStaticCaches() {
+      const [servicesResult, barbersResult] = await Promise.all([
+        supabase.from('servicos').select('*').order('nome'),
+        supabase
+          .from('profiles')
+          .select('id,nome,barbearia_id')
+          .eq('role', 'barbeiro')
+          .order('nome')
+      ])
+      if (servicesResult.error) {
+        console.error('Erro ao carregar serviços:', servicesResult.error)
+        showMessage(listMessage, 'error', 'Não foi possível carregar os serviços.')
+      } else {
+        servicesCache = servicesResult.data || []
+        serviceLookup = new Map(servicesCache.map(s => [s.id, s]))
+      }
+      if (barbersResult.error) {
+        console.error('Erro ao carregar barbeiros:', barbersResult.error)
+        showMessage(listMessage, 'error', 'Não foi possível carregar os barbeiros.')
+      } else {
+        barbersCache = barbersResult.data || []
+        barberLookup = new Map(barbersCache.map(b => [b.id, b]))
+      }
+    }
 
-// Calendar / List toggles
-btnVerCalendario.addEventListener('click', () => {
-  calendarioContainer.classList.remove('hidden')
-  listaAgendamentos.classList.add('hidden')
-  btnVerCalendario.classList.add('hidden')
-  btnVerLista.classList.remove('hidden')
-  inicializarCalendario()
-})
+    async function loadMyBookings({ showSuccessMessage = false } = {}) {
+      if (!bookingState.cliente_id) return
+      hideMessage(listMessage)
+      try {
+        const { data, error } = await supabase
+          .from('agendamentos')
+          .select('id, data, hora, status, servico_id, barbearia_id, barbeiro_id')
+          .eq('cliente_id', bookingState.cliente_id)
+          .order('data', { ascending: false })
+          .order('hora', { ascending: false })
+        if (error) throw error
+        if (!data || data.length === 0) {
+          listaAgendamentos.innerHTML = ''
+          mensagemVazia.classList.remove('hidden')
+          cachedBookings = []
+          return
+        }
+        mensagemVazia.classList.add('hidden')
+        const enriched = data.map(item => ({
+          ...item,
+          servicos: serviceLookup.get(item.servico_id),
+          barbeiro: barberLookup.get(item.barbeiro_id),
+          barbearias: barbeariaLookup.get(item.barbearia_id)
+        }))
+        cachedBookings = enriched
+        renderMyBookings(enriched)
+        if (!calendarioContainer.classList.contains('hidden')) {
+          inicializarCalendario(enriched)
+        }
+        if (showSuccessMessage) {
+          showMessage(listMessage, 'success', 'Lista atualizada.')
+        }
+      } catch (error) {
+        console.error('Erro ao buscar agendamentos:', error)
+        listaAgendamentos.innerHTML = ''
+        mensagemVazia.classList.remove('hidden')
+        showMessage(listMessage, 'error', 'Não foi possível carregar seus agendamentos.')
+      }
+    }
 
-btnVerLista.addEventListener('click', () => {
-  calendarioContainer.classList.add('hidden')
-  listaAgendamentos.classList.remove('hidden')
-  btnVerLista.classList.add('hidden')
-  btnVerCalendario.classList.remove('hidden')
-  if (calendario) calendario.destroy()
-})
+    function renderMyBookings(agendamentos) {
+      const statusPalette = {
+        pendente: 'bg-yellow-900 text-yellow-200 border-yellow-700',
+        confirmado: 'bg-emerald-900 text-emerald-200 border-emerald-700',
+        concluido: 'bg-sky-900 text-sky-200 border-sky-700',
+        cancelado: 'bg-rose-900 text-rose-200 border-rose-700',
+        default: 'bg-slate-900 text-slate-200 border-slate-700'
+      }
+      const html = agendamentos
+        .map(age => {
+          const service = age.servicos
+          const barber = age.barbeiro
+          const barbearia = age.barbearias
+          const status = (age.status || 'pendente').toLowerCase()
+          const badgeClasses = statusPalette[status] || statusPalette.default
+          const dataFormatada = age.data
+            ? new Date(age.data).toLocaleDateString('pt-BR')
+            : '—'
+          const preco = service ? formatCurrency(service.preco) : formatCurrency(0)
+          const duration = service?.duracao ? `${service.duracao} min` : '-- min'
+          const showCancelButton = canCancelBooking(age)
+          return `
+            <div class="bg-slate-900 p-4 rounded-xl border border-slate-700 hover:border-green-500 transition">
+              <div class="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                <div class="flex-1 space-y-2">
+                  <div class="text-gray-400 text-sm">${barbearia?.nome || ''}</div>
+                  <div class="font-bold text-lg">${service?.nome || 'Serviço'}</div>
+                  <div class="text-sm text-gray-400 flex flex-wrap gap-3">
+                    <span>${dataFormatada}</span>
+                    <span>${age.hora || '--:--'}</span>
+                    <span>${duration}</span>
+                  </div>
+                </div>
+                <div class="text-right">
+                  <div class="text-2xl font-bold text-green-400">${preco}</div>
+                  <span class="text-xs ${badgeClasses} px-2 py-1 rounded inline-block mt-2 uppercase">${status}</span>
+                </div>
+              </div>
+              <div class="flex flex-wrap justify-between items-center text-xs text-gray-400 mt-3">
+                <span>Barbeiro: ${barber?.nome || '--'}</span>
+                <span>Serviço: ${service?.nome || '--'}</span>
+              </div>
+              ${showCancelButton ? `
+                <div class="flex gap-2 border-t border-slate-700 pt-3 mt-3">
+                  <button onclick="editarAgendamento('${age.id}')" class="flex-1 bg-blue-600 hover:bg-blue-700 px-3 py-2 rounded text-sm font-semibold">Editar</button>
+                  <button onclick="cancelarAgendamento('${age.id}')" class="flex-1 bg-red-600 hover:bg-red-700 px-3 py-2 rounded text-sm font-semibold">Cancelar</button>
+                </div>
+              ` : ''}
+            </div>
+          `
+        })
+        .join('')
+      listaAgendamentos.innerHTML = html
+    }
 
-// Editar agendamento
-window.editarAgendamento = async (id) => {
-  const { data: agendamento } = await supabase
-    .from('agendamentos')
-    .select('*')
-    .eq('id', id)
-    .single()
-  
-  if (!agendamento) return
-  
-  agendamentoEditando = id
-  formTitle.textContent = 'Editar Agendamento'
-  formAgendamento.classList.remove('hidden')
-  
-  await carregarBarbearias()
-  selectBarbearia.value = agendamento.barbearia_id
-  const barEdit = barbearias.find(b => b.id === agendamento.barbearia_id)
-  if (barEdit) {
-    selectedBarbeariaDisplay.textContent = barEdit.nome
-    selectedBarbeariaDisplay.classList.remove('hidden')
-  }
-  await carregarBarbeiros(agendamento.barbearia_id)
-  await carregarServicos(agendamento.barbearia_id)
-  
-  selectBarbeiro.value = agendamento.barbeiro_id
-  selectServico.value = agendamento.servico_id
-  inputData.value = agendamento.data
-  inputHora.value = agendamento.hora
-  
-  window.scrollTo({ top: 0, behavior: 'smooth' })
-}
+    function canCancelBooking(agendamento) {
+      if (!agendamento.data) return false
+      if ((agendamento.status || '').toLowerCase() === 'cancelado') return false
+      const today = new Date()
+      const todayStart = new Date(today.toISOString().split('T')[0])
+      const agendaDate = new Date(`${agendamento.data}T${agendamento.hora || '00:00'}`)
+      return agendaDate >= todayStart
+    }
 
-// Cancelar agendamento
-window.cancelarAgendamento = async (id) => {
-  if (!confirm('Tem certeza que deseja cancelar este agendamento?')) return
-  
-  const { error } = await supabase
-    .from('agendamentos')
-    .update({ status: 'cancelado' })
-    .eq('id', id)
-  
-  if (error) {
-    alert('Erro ao cancelar agendamento: ' + error.message)
-    return
-  }
-  
-  alert('Agendamento cancelado com sucesso!')
-  await carregarAgendamentos()
-}
+    function inicializarCalendario(agendamentos = []) {
+      if (calendario) calendario.destroy()
+      const eventos = agendamentos.map(item => {
+        const hora = item.hora || '09:00'
+        return {
+          id: item.id,
+          title: item.servicos?.nome || 'Agendamento',
+          start: `${item.data}T${hora}`
+        }
+      })
+      calendario = new FullCalendar.Calendar(calendarioClienteDiv, {
+        initialView: 'dayGridMonth',
+        locale: 'pt-br',
+        headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek,timeGridDay' },
+        events: eventos,
+        height: 'auto'
+      })
+      calendario.render()
+    }
 
-// Salvar agendamento
-btnSalvarAgendamento.addEventListener('click', async () => {
-  if (!selectBarbearia.value || !selectBarbeiro.value || !selectServico.value || !inputData.value || !inputHora.value) {
-    alert('Preencha todos os campos!')
-    return
-  }
+    window.cancelarAgendamento = async id => {
+      showMessage(listMessage, 'info', 'Cancelando agendamento...')
+      const { error } = await supabase
+        .from('agendamentos')
+        .update({ status: 'cancelado' })
+        .eq('id', id)
+        .eq('cliente_id', bookingState.cliente_id)
+      if (error) {
+        console.error('Erro cancelando agendamento:', error)
+        showMessage(listMessage, 'error', 'Não foi possível cancelar o agendamento.')
+        return
+      }
+      showMessage(listMessage, 'success', 'Agendamento cancelado com sucesso.')
+      await loadMyBookings()
+    }
 
-  const dados = {
-    barbearia_id: selectBarbearia.value,
-    barbeiro_id: selectBarbeiro.value,
-    servico_id: selectServico.value,
-    data: inputData.value,
-    hora: inputHora.value,
-    status: 'pendente'
-  }
-  // barbearia_nome removed: backend schema does not include this column
-  
-  let error
+    window.editarAgendamento = async id => {
+      const { data, error } = await supabase
+        .from('agendamentos')
+        .select('*')
+        .eq('id', id)
+        .single()
+      if (error || !data) {
+        console.error('Erro ao carregar agendamento:', error)
+        showMessage(listMessage, 'error', 'Não foi possível carregar o agendamento.')
+        return
+      }
+      agendamentoEditando = id
+      formTitle.textContent = 'Editar Agendamento'
+      showSelectBarbearia()
+      bookingState.barbearia_id = data.barbearia_id
+      bookingState.barbeiro_id = data.barbeiro_id
+      bookingState.servico_id = data.servico_id
+      bookingState.selectedDate = data.data
+      bookingState.selectedTime = data.hora
+      inputData.value = data.data || ''
+      inputHora.value = data.hora || ''
+      populateBarbeiros(data.barbearia_id)
+      populateServicos(data.barbearia_id)
+      selectBarbearia.value = data.barbearia_id || ''
+      selectBarbeiro.value = data.barbeiro_id || ''
+      selectServico.value = data.servico_id || ''
+      highlightTimeSlot(data.hora)
+      updateWizardSummary()
+      showMessage(wizardMessage, 'info', 'Modo edição ativo. Atualize os passos e confirme.')
+      setActiveTab('new')
+      goToWizardStep(3)
+    }
 
-  if (agendamentoEditando) {
-    const { error: updateError } = await supabase
-      .from('agendamentos')
-      .update(dados)
-      .eq('id', agendamentoEditando)
-    error = updateError
-  } else {
-    dados.cliente_id = userData.user.id
-    const { error: insertError } = await supabase
-      .from('agendamentos')
-      .insert([dados])
-    error = insertError
-  }
+    btnTabList.addEventListener('click', () => {
+      setActiveTab('list')
+    })
 
-  if (error) {
-    alert('Erro ao salvar agendamento: ' + error.message)
-    return
-  }
+    btnTabNew.addEventListener('click', () => {
+      agendamentoEditando = null
+      formTitle.textContent = 'Novo Agendamento'
+      setActiveTab('new')
+      goToWizardStep(currentWizardStep)
+    })
 
-  alert(agendamentoEditando ? 'Agendamento atualizado com sucesso!' : 'Agendamento criado com sucesso!')
-  formAgendamento.classList.add('hidden')
-  agendamentoEditando = null
-  await carregarAgendamentos()
-})
+    btnRefreshBookings.addEventListener('click', () => {
+      loadMyBookings({ showSuccessMessage: true })
+    })
 
-btnLogout.addEventListener('click', async () => {
-  await supabase.auth.signOut()
-  window.location.href = 'login.html'
-})
+    btnVerCalendario.addEventListener('click', () => {
+      calendarioContainer.classList.remove('hidden')
+      listaAgendamentos.classList.add('hidden')
+      btnVerCalendario.classList.add('hidden')
+      btnVerLista.classList.remove('hidden')
+      inicializarCalendario(cachedBookings)
+    })
 
-// Inicializar
-console.log('Chamando carregarBarbearias e carregarAgendamentos...')
-await carregarBarbearias()
-await carregarAgendamentos()
-console.log('Inicialização completa')
+    btnVerLista.addEventListener('click', () => {
+      calendarioContainer.classList.add('hidden')
+      listaAgendamentos.classList.remove('hidden')
+      btnVerLista.classList.add('hidden')
+      btnVerCalendario.classList.remove('hidden')
+      if (calendario) calendario.destroy()
+    })
 
-</script>
+    selectBarbearia.addEventListener('change', event => {
+      selectedBarbeariaDisplay.classList.add('hidden')
+      const value = event.target.value
+      bookingState.barbearia_id = value || null
+      bookingState.barbeiro_id = null
+      bookingState.servico_id = null
+      selectBarbeiro.innerHTML = '<option value="">Selecione um barbeiro</option>'
+      selectServico.innerHTML = '<option value="">Selecione um serviço</option>'
+      if (value) {
+        populateBarbeiros(value)
+        populateServicos(value)
+      } else {
+        selectBarbeiro.disabled = true
+        selectServico.disabled = true
+      }
+      updateWizardSummary()
+    })
 
+    selectBarbeiro.addEventListener('change', event => {
+      bookingState.barbeiro_id = event.target.value || null
+      updateWizardSummary()
+    })
+
+    selectServico.addEventListener('change', event => {
+      bookingState.servico_id = event.target.value || null
+      updateWizardSummary()
+    })
+
+    inputData.addEventListener('change', event => {
+      bookingState.selectedDate = event.target.value || null
+      hideMessage(wizardMessage)
+      updateWizardSummary()
+    })
+
+    inputHora.addEventListener('change', event => {
+      bookingState.selectedTime = event.target.value || null
+      highlightTimeSlot(event.target.value)
+      hideMessage(wizardMessage)
+      updateWizardSummary()
+    })
+
+    timeSlotButtons.addEventListener('click', event => {
+      const button = event.target.closest('button[data-time-slot]')
+      if (!button) return
+      const value = button.dataset.timeSlot
+      inputHora.value = value
+      bookingState.selectedTime = value
+      highlightTimeSlot(value)
+      hideMessage(wizardMessage)
+      updateWizardSummary()
+    })
+
+    wizardNextToStep2.addEventListener('click', () => {
+      if (!inputData.value) {
+        showMessage(wizardMessage, 'error', 'Escolha uma data antes de continuar.')
+        return
+      }
+      bookingState.selectedDate = inputData.value
+      hideMessage(wizardMessage)
+      goToWizardStep(2)
+    })
+
+    wizardNextToStep3.addEventListener('click', () => {
+      const hora = inputHora.value || bookingState.selectedTime
+      if (!hora) {
+        showMessage(wizardMessage, 'error', 'Escolha um horário antes de continuar.')
+        return
+      }
+      bookingState.selectedTime = hora
+      highlightTimeSlot(hora)
+      hideMessage(wizardMessage)
+      goToWizardStep(3)
+      updateWizardSummary()
+    })
+
+    wizardBackToStep1.addEventListener('click', () => {
+      goToWizardStep(1)
+    })
+
+    wizardBackToStep2.addEventListener('click', () => {
+      goToWizardStep(2)
+    })
+
+    btnSalvarAgendamento.addEventListener('click', async () => {
+      hideMessage(wizardMessage)
+      if (!bookingState.barbearia_id) {
+        showMessage(wizardMessage, 'error', 'Escolha uma barbearia.')
+        return
+      }
+      if (!bookingState.barbeiro_id) {
+        showMessage(wizardMessage, 'error', 'Escolha um barbeiro.')
+        return
+      }
+      if (!bookingState.servico_id) {
+        showMessage(wizardMessage, 'error', 'Escolha um serviço.')
+        return
+      }
+      if (!bookingState.selectedDate) {
+        showMessage(wizardMessage, 'error', 'Escolha uma data.')
+        return
+      }
+      if (!bookingState.selectedTime) {
+        showMessage(wizardMessage, 'error', 'Escolha um horário.')
+        return
+      }
+
+      const dados = {
+        barbearia_id: bookingState.barbearia_id,
+        barbeiro_id: bookingState.barbeiro_id,
+        servico_id: bookingState.servico_id,
+        data: bookingState.selectedDate,
+        hora: bookingState.selectedTime,
+        status: 'pendente'
+      }
+
+      let error
+      if (agendamentoEditando) {
+        const { error: updateError } = await supabase
+          .from('agendamentos')
+          .update(dados)
+          .eq('id', agendamentoEditando)
+        error = updateError
+      } else {
+        dados.cliente_id = bookingState.cliente_id
+        const { error: insertError } = await supabase
+          .from('agendamentos')
+          .insert([dados])
+        error = insertError
+      }
+
+      if (error) {
+        console.error('Erro ao salvar agendamento:', error)
+        showMessage(wizardMessage, 'error', `Erro ao salvar agendamento: ${error.message}`)
+        return
+      }
+
+      const successText = agendamentoEditando
+        ? 'Agendamento atualizado com sucesso!'
+        : 'Agendamento criado com sucesso!'
+      showMessage(wizardMessage, 'success', successText)
+      agendamentoEditando = null
+      formTitle.textContent = 'Novo Agendamento'
+      resetWizard()
+      setActiveTab('list')
+      await loadMyBookings()
+      showMessage(listMessage, 'success', successText)
+    })
+
+    btnCancelarForm.addEventListener('click', () => {
+      agendamentoEditando = null
+      formTitle.textContent = 'Novo Agendamento'
+      resetWizard()
+      setActiveTab('list')
+    })
+
+    btnLogout.addEventListener('click', async () => {
+      await supabase.auth.signOut()
+      window.location.href = 'login.html'
+    })
+
+    async function initialize() {
+      const { data: userData } = await supabase.auth.getUser()
+      if (!userData?.user) {
+        console.error('Usuário não autenticado')
+        showMessage(listMessage, 'error', 'Sessão expirada. Faça login novamente.')
+        window.location.href = 'login.html'
+        return
+      }
+
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('nome, role')
+        .eq('id', userData.user.id)
+        .single()
+      if (profileError || !profile) {
+        console.error('Erro ao carregar perfil:', profileError)
+        showMessage(listMessage, 'error', 'Erro ao carregar perfil.')
+        window.location.href = 'login.html'
+        return
+      }
+
+      bookingState.cliente_id = userData.user.id
+      userName.textContent = profile.nome || 'Cliente'
+      if (profile.role !== 'cliente') {
+        console.warn('Usuário não é cliente, role:', profile.role)
+      }
+
+      await Promise.all([carregarBarbearias(), loadStaticCaches()])
+      renderTimeSlots()
+      if (preBarbeariaId) {
+        applyPreselectedBarbearia(preBarbeariaId)
+      }
+      resetWizard()
+      await loadMyBookings()
+      setActiveTab('list')
+    }
+
+    initialize()
+  </script>
 </body>
 </html>

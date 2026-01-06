@@ -172,7 +172,7 @@ async function carregarDados() {
     try {
       const linkContainer = document.getElementById('barbeariaLinkAdmin')
       if (linkContainer) {
-        const url = `${location.origin}/public/client.html?barbearia_id=${barbe.id}`
+        const url = `${location.origin}/docs/client.html?barbearia_id=${barbe.id}`
         linkContainer.innerHTML = `<a href="${url}" class="text-green-400 hover:underline mr-2">Abrir cliente</a><button onclick="copiarLinkAdmin('${url}')" class="bg-slate-800 px-2 py-1 rounded text-xs">Copiar link</button>`
       }
     } catch (e) {

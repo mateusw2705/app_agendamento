@@ -115,11 +115,17 @@
               <span class="text-xs text-gray-400">Calendário</span>
             </div>
             <p class="text-xs text-gray-400 mb-3">Apenas datas futuras são permitidas.</p>
-            <div class="flex flex-wrap items-center gap-3">
-              <input id="inputData" type="date" class="w-full max-w-xs p-3 bg-slate-800 rounded-lg border border-slate-700" min="">
-              <button id="wizardNextToStep2" type="button" class="bg-green-500 hover:bg-green-600 text-black px-4 py-2 rounded-lg text-sm font-semibold">
-                Próximo
-              </button>
+            <div class="space-y-2">
+              <div class="flex flex-wrap items-center gap-3">
+                <input id="inputData" type="date" class="w-full max-w-xs p-3 bg-slate-800 rounded-lg border border-slate-700" min="">
+                <button id="wizardNextToStep2" type="button" class="bg-green-500 hover:bg-green-600 text-black px-4 py-2 rounded-lg text-sm font-semibold">
+                  Próximo
+                </button>
+              </div>
+              <div class="text-xs text-gray-400">
+                Escolha um dia com horários liberados, os indicadores mostram quando há slots disponíveis.
+              </div>
+              <div id="weekDatePicker" class="flex gap-2 overflow-x-auto py-2"></div>
             </div>
           </div>
 
@@ -242,7 +248,13 @@
     const shareLinkArea = document.getElementById('shareLinkArea')
     const shareLinkAnchor = document.getElementById('shareLinkAnchor')
     const copyShareLink = document.getElementById('copyShareLink')
+    const weekDatePicker = document.getElementById('weekDatePicker')
     let availableTimeSlots = []
+    let weekAvailability = []
+    let weekAnchorDate = new Date()
+    let weekLoading = false
+    const availabilityCache = new Map()
+    let carregandoHorarios = false
 
     inputData.min = new Date().toISOString().split('T')[0]
 
@@ -303,6 +315,152 @@
       })
     }
 
+    function formatISODate(date) {
+      if (!date) return ''
+      return new Date(date).toISOString().slice(0, 10)
+    }
+
+    function buildAvailabilityCacheKey(dateKey, barberId, serviceId) {
+      return `${barberId || 'none'}|${serviceId || 'all'}|${dateKey}`
+    }
+
+    function renderWeekDays() {
+      if (!weekDatePicker) return
+      if (!bookingState.barbeiro_id) {
+        weekDatePicker.innerHTML = '<span class="text-xs text-gray-400">Escolha um barbeiro para ver os dias disponíveis.</span>'
+        return
+      }
+      if (weekLoading) {
+        weekDatePicker.innerHTML = '<span class="text-xs text-gray-400">Carregando disponibilidade...</span>'
+        return
+      }
+      const anchorDate = weekAvailability[0]?.date ? new Date(weekAvailability[0].date) : new Date(weekAnchorDate)
+      const start = new Date(anchorDate)
+      weekDatePicker.innerHTML = ''
+      for (let i = 0; i < 7; i++) {
+        const day = new Date(start)
+        day.setDate(start.getDate() + i)
+        const dateKey = formatISODate(day)
+        const availability = weekAvailability.find(item => item.dateKey === dateKey)
+        const hasSlots = availability?.available
+        const isSelected = bookingState.selectedDate === dateKey
+        const weekdayLabel = day.toLocaleDateString('pt-BR', { weekday: 'short' }).replace('.', '').toUpperCase()
+        const button = document.createElement('button')
+        button.type = 'button'
+        button.dataset.date = dateKey
+        button.disabled = !hasSlots
+        const baseClasses = 'flex flex-col items-center gap-1 min-w-[54px] px-2 py-2 rounded-lg text-xs border transition'
+        if (isSelected) {
+          button.className = `${baseClasses} bg-green-500 text-black border-green-400`
+        } else if (hasSlots) {
+          button.className = `${baseClasses} bg-slate-800 text-white border-slate-600 hover:border-white`
+        } else {
+          button.className = `${baseClasses} bg-slate-900 text-gray-500 border-slate-800 cursor-not-allowed opacity-50`
+        }
+        button.innerHTML = `
+          <span class="uppercase">${weekdayLabel}</span>
+          <span class="text-lg font-semibold">${day.getDate()}</span>
+          ${hasSlots ? '<span class="w-2 h-2 rounded-full bg-emerald-400"></span>' : ''}
+        `
+        weekDatePicker.appendChild(button)
+      }
+    }
+
+    function updateWeekAvailability(dateKey, slots = []) {
+      if (!dateKey) return
+      const sanitizedSlots = Array.isArray(slots) ? slots : []
+      const available = sanitizedSlots.length > 0
+      const idx = weekAvailability.findIndex(item => item.dateKey === dateKey)
+      if (idx >= 0) {
+        weekAvailability[idx] = {
+          ...weekAvailability[idx],
+          slots: sanitizedSlots,
+          available
+        }
+      } else {
+        weekAvailability.push({
+          date: new Date(dateKey),
+          dateKey,
+          slots: sanitizedSlots,
+          available
+        })
+        weekAvailability.sort((a, b) => new Date(a.date) - new Date(b.date))
+      }
+    }
+
+    async function fetchDayAvailability(date, barberId, serviceId) {
+      const dateKey = formatISODate(date)
+      if (!dateKey || !barberId) {
+        return { date, slots: [] }
+      }
+      const cacheKey = buildAvailabilityCacheKey(dateKey, barberId, serviceId)
+      if (availabilityCache.has(cacheKey)) {
+        return { date, slots: availabilityCache.get(cacheKey) }
+      }
+      try {
+        const { data, error } = await supabase.rpc('get_horarios_disponiveis', {
+          p_barbeiro_id: barberId,
+          p_servico_id: serviceId || null,
+          p_data: dateKey,
+          p_intervalo_min: 30
+        })
+        if (error) {
+          throw error
+        }
+        const slots = Array.from(new Set(
+          (data || []).map(item => (item?.hora || '').slice(0, 5)).filter(Boolean)
+        ))
+        availabilityCache.set(cacheKey, slots)
+        return { date, slots }
+      } catch (error) {
+        console.error('Erro ao buscar disponibilidade para', dateKey, error)
+        return { date, slots: [] }
+      }
+    }
+
+    async function carregarDisponibilidadeSemana(anchorDate) {
+      weekAnchorDate = new Date(anchorDate || weekAnchorDate || new Date())
+      if (!bookingState.barbeiro_id) {
+        weekAvailability = []
+        renderWeekDays()
+        return
+      }
+      weekLoading = true
+      renderWeekDays()
+      const base = new Date(weekAnchorDate)
+      const promises = []
+      for (let i = 0; i < 7; i++) {
+        const day = new Date(base)
+        day.setDate(base.getDate() + i)
+        promises.push(fetchDayAvailability(day, bookingState.barbeiro_id, bookingState.servico_id))
+      }
+      const results = await Promise.all(promises)
+      weekAvailability = results.map(({ date, slots }) => ({
+        date,
+        dateKey: formatISODate(date),
+        slots,
+        available: (slots || []).length > 0
+      }))
+      weekAvailability.sort((a, b) => new Date(a.date) - new Date(b.date))
+      weekLoading = false
+      renderWeekDays()
+    }
+
+    if (weekDatePicker) {
+      weekDatePicker.addEventListener('click', event => {
+        const button = event.target.closest('button[data-date]')
+        if (!button || button.disabled) return
+        const dateKey = button.dataset.date
+        const availability = weekAvailability.find(item => item.dateKey === dateKey)
+        carregarHorariosDisponiveisCliente({
+          dateOverride: dateKey,
+          preloadedSlots: availability?.slots
+        })
+      })
+    }
+
+    renderWeekDays()
+
     function updateShareLinkDisplay(barbeariaId) {
       if (!shareLinkArea || !shareLinkAnchor) return
       if (!barbeariaId) {
@@ -328,42 +486,65 @@
       }
     }
 
-    async function carregarHorariosDisponiveisCliente() {
-      if (!bookingState.barbeiro_id || !bookingState.selectedDate) {
+    async function carregarHorariosDisponiveisCliente({ dateOverride, preloadedSlots } = {}) {
+      const targetDate = dateOverride || bookingState.selectedDate || inputData.value
+      if (!bookingState.barbeiro_id) {
         availableTimeSlots = []
         renderTimeSlots()
-        setSlotsMessage('Selecione barbeiro e data para ver os horários disponíveis.')
+        setSlotsMessage('Escolha um barbeiro para ver os horários disponíveis.')
         return
       }
 
-      setSlotsMessage('Carregando horários disponíveis...')
-      availableTimeSlots = []
+      if (!targetDate) {
+        availableTimeSlots = []
+        renderTimeSlots()
+        setSlotsMessage('Escolha uma data para visualizar os horários.')
+        return
+      }
+
+      bookingState.selectedDate = targetDate
+      inputData.value = targetDate
+
+      const dateKey = targetDate
+      let slots = Array.isArray(preloadedSlots) ? preloadedSlots : undefined
+      const cacheKey = buildAvailabilityCacheKey(dateKey, bookingState.barbeiro_id, bookingState.servico_id)
+
+      if (!slots && availabilityCache.has(cacheKey)) {
+        slots = availabilityCache.get(cacheKey)
+      }
+
+      if (!slots) {
+        if (carregandoHorarios) return
+        setSlotsMessage('Carregando horários disponíveis...')
+        availableTimeSlots = []
+        renderTimeSlots()
+        carregandoHorarios = true
+
+        const { data, error } = await supabase.rpc('get_horarios_disponiveis', {
+          p_barbeiro_id: bookingState.barbeiro_id,
+          p_servico_id: bookingState.servico_id || null,
+          p_data: dateKey,
+          p_intervalo_min: 30
+        })
+
+        carregandoHorarios = false
+
+        if (error) {
+          console.error('Erro ao carregar horários disponíveis (cliente):', error)
+          setSlotsMessage('Erro ao carregar horários disponíveis.')
+          return
+        }
+
+        slots = Array.from(new Set(
+          (data || []).map(item => (item?.hora || '').slice(0, 5)).filter(Boolean)
+        ))
+      }
+
+      availableTimeSlots = slots
+      availabilityCache.set(cacheKey, availableTimeSlots)
+      updateWeekAvailability(dateKey, availableTimeSlots)
+      renderWeekDays()
       renderTimeSlots()
-      carregandoHorarios = true
-
-      const { data, error } = await supabase.rpc('get_horarios_disponiveis', {
-        p_barbeiro_id: bookingState.barbeiro_id,
-        p_servico_id: bookingState.servico_id || null,
-        p_data: bookingState.selectedDate,
-        p_intervalo_min: 30
-      })
-
-
-      console.log('Horários disponíveis (cliente):', data)
-
-      carregandoHorarios = false
-
-      if (error) {
-        console.error('Erro ao carregar horários disponíveis (cliente):', error)
-        setSlotsMessage('Erro ao carregar horários disponíveis.')
-        return
-      }
-
-      const horarios = Array.from(new Set(
-        (data || []).map(item => (item?.hora || '').slice(0,5)).filter(Boolean)
-      ))
-
-      availableTimeSlots = horarios
       highlightTimeSlot(null)
       bookingState.selectedTime = null
       inputHora.value = ''
@@ -371,10 +552,10 @@
       if (availableTimeSlots.length) {
         setSlotsMessage(`${availableTimeSlots.length} horário(s) disponível(is).`)
       } else {
-        setSlotsMessage('Nenhum horário disponível para esta data.')
+        setSlotsMessage('Nenhum horário disponível para essa data.')
       }
 
-      renderTimeSlots()
+      return availableTimeSlots
     }
 
     function highlightTimeSlot(value) {
@@ -494,6 +675,7 @@
       selectBarbearia.disabled = true
       populateBarbeiros(barbeariaId)
       populateServicos(barbeariaId)
+      carregarDisponibilidadeSemana()
     }
 
     function showSelectBarbearia() {
@@ -770,22 +952,46 @@
     selectBarbeiro.addEventListener('change', event => {
       bookingState.barbeiro_id = event.target.value || null
       updateWizardSummary()
+      carregarHorariosDisponiveisCliente({
+        dateOverride: bookingState.selectedDate || inputData.value || undefined
+      })
+      if (bookingState.barbeiro_id) {
+        carregarDisponibilidadeSemana()
+      } else {
+        weekAvailability = []
+        renderWeekDays()
+      }
     })
 
     selectServico.addEventListener('change', event => {
       bookingState.servico_id = event.target.value || null
       updateWizardSummary()
+      carregarHorariosDisponiveisCliente({
+        dateOverride: bookingState.selectedDate || inputData.value || undefined
+      })
+      if (bookingState.barbeiro_id) {
+        carregarDisponibilidadeSemana()
+      }
     })
 
     inputData.addEventListener('change', event => {
       bookingState.selectedDate = event.target.value || null
       hideMessage(wizardMessage)
       updateWizardSummary()
+      carregarHorariosDisponiveisCliente()
     })
 
     inputHora.addEventListener('change', event => {
-      bookingState.selectedTime = event.target.value || null
-      highlightTimeSlot(event.target.value)
+      const value = event.target.value || null
+      if (value && availableTimeSlots.length && !availableTimeSlots.includes(value)) {
+        showMessage(wizardMessage, 'error', 'Escolha um horário disponível.')
+        event.target.value = ''
+        bookingState.selectedTime = null
+        highlightTimeSlot(null)
+        return
+      }
+      bookingState.selectedTime = value
+      highlightTimeSlot(value)
       hideMessage(wizardMessage)
       updateWizardSummary()
     })
@@ -801,13 +1007,26 @@
       updateWizardSummary()
     })
 
-    wizardNextToStep2.addEventListener('click', () => {
+    wizardNextToStep2.addEventListener('click', async () => {
       if (!inputData.value) {
         showMessage(wizardMessage, 'error', 'Escolha uma data antes de continuar.')
         return
       }
+      if (!bookingState.barbeiro_id) {
+        showMessage(wizardMessage, 'error', 'Escolha um barbeiro antes de continuar.')
+        return
+      }
+      if (!bookingState.servico_id) {
+        showMessage(wizardMessage, 'error', 'Escolha um serviço antes de continuar.')
+        return
+      }
       bookingState.selectedDate = inputData.value
       hideMessage(wizardMessage)
+      await carregarHorariosDisponiveisCliente()
+      if (!availableTimeSlots.length) {
+        showMessage(wizardMessage, 'error', 'Nenhum horário disponível para essa data. Escolha outro dia ou barbeiro.')
+        return
+      }
       goToWizardStep(2)
     })
 
@@ -815,6 +1034,14 @@
       const hora = inputHora.value || bookingState.selectedTime
       if (!hora) {
         showMessage(wizardMessage, 'error', 'Escolha um horário antes de continuar.')
+        return
+      }
+      if (!availableTimeSlots.length) {
+        showMessage(wizardMessage, 'error', 'Nenhum horário disponível. Atualize a data ou o barbeiro.')
+        return
+      }
+      if (!availableTimeSlots.includes(hora)) {
+        showMessage(wizardMessage, 'error', 'Escolha um horário disponível.')
         return
       }
       bookingState.selectedTime = hora
